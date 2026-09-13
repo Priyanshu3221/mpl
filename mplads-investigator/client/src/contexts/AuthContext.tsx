@@ -58,28 +58,34 @@ export function useCurrentRole(): Role | null {
   if (overrideRole) return overrideRole;
   if (!isLoaded) return null;
   if (!user) return null;
-  return normalizeRole(user.publicMetadata?.role);
+  return normalizeRole(user.publicMetadata?.role) ?? ROLES.CITIZEN;
 }
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn } = useAuth();
   const [, setLocation] = useLocation();
-  useEffect(() => { if (isLoaded && !isSignedIn) setLocation(`/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`); }, [isLoaded, isSignedIn, setLocation]);
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      const currentPath = window.location.pathname;
+      setLocation(`/sign-in?redirect_url=${encodeURIComponent(currentPath)}`);
+    }
+  }, [isLoaded, isSignedIn, setLocation]);
+
   if (!isLoaded || !isSignedIn) return <AuthLoading />;
   return <>{children}</>;
 }
 
 export function RoleProtectedRoute({ permission, children }: { permission: Permission; children: React.ReactNode }) {
-  const { isLoaded } = useAuth();
+  const { isLoaded, isSignedIn } = useAuth();
   const role = useCurrentRole();
   const [, setLocation] = useLocation();
   useEffect(() => {
-    if (isLoaded && role && !can(role, permission)) {
+    if (isLoaded && isSignedIn && role && !can(role, permission)) {
       setLocation("/access-denied");
     }
-  }, [isLoaded, role, permission, setLocation]);
+  }, [isLoaded, isSignedIn, role, permission, setLocation]);
 
-  if (!isLoaded || !role) return <AuthLoading />;
+  if (!isLoaded || !isSignedIn || !role) return <AuthLoading />;
   if (!can(role, permission)) return null;
   return <>{children}</>;
 }
@@ -88,7 +94,13 @@ export function RedirectSignedIn() {
   const { isLoaded, isSignedIn } = useAuth();
   const role = useCurrentRole();
   const [, setLocation] = useLocation();
-  useEffect(() => { if (isLoaded && isSignedIn && role) setLocation(landingFor(role)); }, [isLoaded, isSignedIn, role, setLocation]);
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      const activeRole = role || ROLES.CITIZEN;
+      setLocation(landingFor(activeRole));
+    }
+  }, [isLoaded, isSignedIn, role, setLocation]);
+
   if (!isLoaded || isSignedIn) return <AuthLoading />;
   return null;
 }
