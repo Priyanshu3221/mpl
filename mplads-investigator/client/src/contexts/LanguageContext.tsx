@@ -1,14 +1,25 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-export type Language = "EN" | "HI";
+export type Language = "EN" | "HI" | "KN" | "TE" | "TA" | "MR" | "BN";
+
+export const LANGUAGE_LABELS: Record<Language, string> = {
+  EN: "English",
+  HI: "हिंदी (Hindi)",
+  KN: "ಕನ್ನಡ (Kannada)",
+  TE: "తెలుగు (Telugu)",
+  TA: "தமிழ் (Tamil)",
+  MR: "मराठी (Marathi)",
+  BN: "বাংলা (Bengali)",
+};
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
+  translateDynamicText: (text: string) => Promise<string>;
 }
 
-const translations: Record<Language, Record<string, string>> = {
+const translations: Record<string, Record<string, string>> = {
   EN: {
     dashboard: "Dashboard",
     projects: "Projects",
@@ -47,6 +58,7 @@ const LanguageContext = createContext<LanguageContextType>({
   language: "EN",
   setLanguage: () => {},
   t: (key) => key,
+  translateDynamicText: async (text) => text,
 });
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -63,8 +75,24 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return translations[language]?.[key] || translations.EN[key] || key;
   };
 
+  const translateDynamicText = async (text: string): Promise<string> => {
+    if (language === "EN" || !text) return text;
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, targetLanguage: LANGUAGE_LABELS[language] }),
+      });
+      if (!res.ok) return text;
+      const data = (await res.json()) as { translatedText?: string };
+      return data.translatedText || text;
+    } catch {
+      return text;
+    }
+  };
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, translateDynamicText }}>
       {children}
     </LanguageContext.Provider>
   );

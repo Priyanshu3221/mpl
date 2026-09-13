@@ -1,10 +1,12 @@
-import { SignIn, SignUp } from "@clerk/clerk-react";
+import { SignIn, SignUp, useAuth, UserButton } from "@clerk/clerk-react";
 import { ArrowRight, LockKeyhole, ShieldAlert, Network, FileText, CheckCircle2, ShieldCheck, Eye, Layers } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { RedirectSignedIn, useCurrentRole, switchWorkspaceRole } from "@/contexts/AuthContext";
 import { AUTH_DISCLAIMER, APP_NAME, APP_TITLE, DATA_SOURCE_NOTE, DEFERRED_MODULES, ROLE_LABELS, roleLandingCopy, landingFor, ROLES, type Role, focusRing } from "@/constants/permissions";
 
 export function LandingPage() {
+  const { isSignedIn } = useAuth();
+
   return (
     <main className="min-h-screen bg-[#071a2c] text-white">
       {/* Header */}
@@ -16,12 +18,24 @@ export function LandingPage() {
           <span className="text-sm font-bold tracking-wide">{APP_NAME}</span>
         </Link>
         <div className="flex items-center gap-3">
-          <Link
-            href="/sign-in"
-            className={`rounded-md border border-white/25 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 ${focusRing}`}
-          >
-            Sign in <ArrowRight className="ml-1.5 inline" size={15} />
-          </Link>
+          {isSignedIn ? (
+            <div className="flex items-center gap-3">
+              <Link
+                href="/dashboard"
+                className={`rounded-md bg-[#f0b323] px-4 py-2 text-sm font-bold text-[#071a2c] hover:bg-[#f7ce70] transition-colors ${focusRing}`}
+              >
+                Go to Workspace <ArrowRight className="ml-1.5 inline" size={15} />
+              </Link>
+              <UserButton showName={false} />
+            </div>
+          ) : (
+            <Link
+              href="/sign-in"
+              className={`rounded-md border border-white/25 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 ${focusRing}`}
+            >
+              Sign in <ArrowRight className="ml-1.5 inline" size={15} />
+            </Link>
+          )}
         </div>
       </header>
 
@@ -154,7 +168,45 @@ export function LandingPage() {
   );
 }
 
-export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) { return <main className="min-h-screen bg-[#f6f8fb] px-4 py-10 text-[#152536]"><div className="mx-auto max-w-md"><Link href="/" className="mb-8 flex items-center justify-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-md bg-[#102a43] font-extrabold text-[#f0b323]">M</span><span className="text-sm font-bold tracking-wide">{APP_NAME}</span></Link><RedirectSignedIn/>{mode === "sign-in" ? <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" appearance={{ variables: { colorPrimary: "#102a43", borderRadius: "6px" }, elements: { card: "shadow-sm border border-[#dce5ee] rounded-md", formButtonPrimary: "bg-[#102a43] hover:bg-[#173d5b]" } }} /> : <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" appearance={{ variables: { colorPrimary: "#102a43", borderRadius: "6px" }, elements: { card: "shadow-sm border border-[#dce5ee] rounded-md", formButtonPrimary: "bg-[#102a43] hover:bg-[#173d5b]" } }} />}<p className="mx-auto mt-6 max-w-sm text-center text-xs leading-5 text-[#71859a]">{AUTH_DISCLAIMER}</p></div></main>; }
+export function AuthPage({ mode }: { mode: "sign-in" | "sign-up" }) {
+  return (
+    <main className="min-h-screen bg-[#f6f8fb] px-4 py-10 text-[#152536]">
+      <div className="mx-auto max-w-md">
+        <Link href="/" className="mb-8 flex items-center justify-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-[#102a43] font-extrabold text-[#f0b323]">M</span>
+          <span className="text-sm font-bold tracking-wide">{APP_NAME}</span>
+        </Link>
+        <RedirectSignedIn />
+        {mode === "sign-in" ? (
+          <SignIn
+            routing="path"
+            path="/sign-in"
+            signUpUrl="/sign-up"
+            fallbackRedirectUrl="/dashboard"
+            forceRedirectUrl="/dashboard"
+            appearance={{
+              variables: { colorPrimary: "#102a43", borderRadius: "6px" },
+              elements: { card: "shadow-sm border border-[#dce5ee] rounded-md", formButtonPrimary: "bg-[#102a43] hover:bg-[#173d5b]" }
+            }}
+          />
+        ) : (
+          <SignUp
+            routing="path"
+            path="/sign-up"
+            signInUrl="/sign-in"
+            fallbackRedirectUrl="/dashboard"
+            forceRedirectUrl="/dashboard"
+            appearance={{
+              variables: { colorPrimary: "#102a43", borderRadius: "6px" },
+              elements: { card: "shadow-sm border border-[#dce5ee] rounded-md", formButtonPrimary: "bg-[#102a43] hover:bg-[#173d5b]" }
+            }}
+          />
+        )}
+        <p className="mx-auto mt-6 max-w-sm text-center text-xs leading-5 text-[#71859a]">{AUTH_DISCLAIMER}</p>
+      </div>
+    </main>
+  );
+}
 
 export function RouteStub({ title }: { title: string }) { return <section className="max-w-3xl rounded-lg border border-[#dce5ee] bg-white p-7 shadow-sm sm:p-10"><div className="mb-5 flex h-11 w-11 items-center justify-center rounded-md bg-[#eaf2f7] text-[#102a43]"><LockKeyhole size={20}/></div><p className="text-xs font-bold uppercase tracking-[0.17em] text-[#b27b00]">Foundation complete</p><h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1><p className="mt-4 max-w-2xl text-sm leading-6 text-[#607387]">This route is connected to the protected application shell and reserved for the next implementation phase.</p><div className="mt-7 rounded-md border border-[#e6edf2] bg-[#f8fafc] p-4 text-xs leading-5 text-[#607387]">{DEFERRED_MODULES}</div><Link href="/dashboard" className={`mt-7 inline-flex items-center rounded-md bg-[#102a43] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#173d5b] ${focusRing}`}>Return to workspace <ArrowRight className="ml-2" size={15}/></Link></section>; }
 

@@ -95,9 +95,17 @@ export function RedirectSignedIn() {
   const role = useCurrentRole();
   const [, setLocation] = useLocation();
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      const activeRole = role || ROLES.CITIZEN;
-      setLocation(landingFor(activeRole));
+    const path = window.location.pathname;
+    const isVerificationRoute =
+      path.includes("/sso-callback") ||
+      path.includes("/factor-") ||
+      path.includes("/verify");
+
+    if (isLoaded && isSignedIn && !isVerificationRoute) {
+      const searchParams = new URLSearchParams(window.location.search);
+      const redirectUrl = searchParams.get("redirect_url");
+      const target = redirectUrl ? decodeURIComponent(redirectUrl) : landingFor(role || ROLES.CITIZEN);
+      setLocation(target);
     }
   }, [isLoaded, isSignedIn, role, setLocation]);
 
