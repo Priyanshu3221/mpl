@@ -56,6 +56,22 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const canSeeCollusion = can(role, PERMISSIONS.REVIEW_FLAGS);
 
+  const getPageTitle = (pathname: string) => {
+    if (pathname.startsWith("/dashboard")) return "Dashboard Overview";
+    if (pathname.startsWith("/projects/new")) return "New Project Proposal";
+    if (pathname.startsWith("/projects/")) return "Project Workspace";
+    if (pathname.startsWith("/projects")) return "Project Registry";
+    if (pathname.startsWith("/flags/collusion")) return "Collusion & Network Linkages";
+    if (pathname.startsWith("/flags")) return "Fraud Risk Signals";
+    if (pathname.startsWith("/reports")) return "Investigation Reports";
+    if (pathname.startsWith("/notifications")) return "System Notifications";
+    if (pathname.startsWith("/users")) return "User & Role Management";
+    if (pathname.startsWith("/audit")) return "System Audit Trail";
+    if (pathname.startsWith("/compliance")) return "Compliance Statement";
+    if (pathname.startsWith("/accessibility")) return "Accessibility Declaration";
+    return "MPLADS Workspace";
+  };
+
   return (
     <div className="min-h-screen bg-[#f6f8fb] text-[#152536] flex flex-col md:flex-row">
       {/* Mobile Top Bar */}
@@ -141,7 +157,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               const Icon = iconMap[item.icon] || Building2;
               const isActive =
                 location === item.href ||
-                (item.href !== "/dashboard" && location.startsWith(item.href));
+                (item.href !== "/dashboard" && item.href !== "/flags" && location.startsWith(item.href + "/"));
 
               return (
                 <Link
@@ -217,6 +233,31 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Desktop Top Header Bar */}
+        <header className="hidden md:flex items-center justify-between border-b border-[#dce5ee] bg-white px-8 py-3.5 shadow-sm">
+          <div className="flex items-center gap-3">
+            <h1 className="text-base font-bold text-[#102a43]">{getPageTitle(location)}</h1>
+            <span className="text-xs text-[#8aa0b2]">|</span>
+            <span className="rounded bg-[#eaf2f7] px-2.5 py-0.5 text-xs font-semibold text-[#277da1]">
+              {role ? ROLE_LABELS[role] : roleLabel}
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/notifications"
+              className={`relative rounded-md p-2 text-[#607387] hover:bg-[#f1f5f8] ${focusRing}`}
+              title="Notifications"
+            >
+              <Bell size={18} />
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#f0b323]" />
+            </Link>
+            <div className="flex items-center gap-2 border-l border-[#dce5ee] pl-4">
+              <UserButton showName={false} />
+              <span className="text-xs font-semibold text-[#102a43]">Workspace Account</span>
+            </div>
+          </div>
+        </header>
+
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           {children}
         </main>

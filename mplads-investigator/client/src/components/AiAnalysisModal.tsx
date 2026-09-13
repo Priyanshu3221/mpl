@@ -46,10 +46,10 @@ export default function AiAnalysisModal({ type, targetId, targetName = "", onClo
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#b27b00]">
-                  AI Investigator Assistance
+                  Demo AI-Assisted Insight
                 </span>
                 <span className="rounded bg-[#f0b323]/10 border border-[#f0b323]/30 px-2 py-0.5 text-[10px] font-extrabold text-[#b27b00]">
-                  PROTOTYPE MOCK MODEL
+                  ADVISORY ONLY · MOCK MODEL
                 </span>
               </div>
               <h2 id="ai-modal-title" className="text-lg font-semibold text-[#102a43]">
@@ -159,7 +159,7 @@ export default function AiAnalysisModal({ type, targetId, targetName = "", onClo
         {/* Footer Notice */}
         <div className="mt-6 flex items-center justify-between border-t border-[#edf2f5] pt-4">
           <span className="text-[11px] text-[#8aa0b2] flex items-center gap-1">
-            <Cpu size={13} /> Simulated AI Assistant for Prototype Evaluation
+            <Cpu size={13} /> Demo AI insight — Advisory only (Non-authoritative decision support)
           </span>
           <button
             onClick={onClose}

@@ -219,6 +219,16 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          clerk: ["@clerk/clerk-react"],
+          recharts: ["recharts"],
+          framer: ["framer-motion"],
+          lucide: ["lucide-react"],
+        },
+      },
+    },
   },
   server: {
     port: 3000,
