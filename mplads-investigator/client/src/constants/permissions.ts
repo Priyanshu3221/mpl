@@ -1,7 +1,6 @@
 export const ROLES = {
-  MP: "MP",
+  CITIZEN: "Citizen",
   DISTRICT_AUTHORITY: "District Authority",
-  IMPLEMENTING_AGENCY: "Implementing Agency",
   ADMIN: "Admin",
 } as const;
 
@@ -27,29 +26,48 @@ export const PERMISSIONS = {
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
-  [ROLES.MP]: [PERMISSIONS.VIEW_PROJECTS, PERMISSIONS.CREATE_PROJECT, PERMISSIONS.EDIT_PROJECT, PERMISSIONS.SUBMIT_PROJECT],
-  [ROLES.DISTRICT_AUTHORITY]: [PERMISSIONS.VIEW_DASHBOARD, PERMISSIONS.VIEW_PROJECTS, PERMISSIONS.REVIEW_PROJECT, PERMISSIONS.APPROVE_PROJECT, PERMISSIONS.REJECT_PROJECT, PERMISSIONS.VIEW_FLAGS, PERMISSIONS.REVIEW_FLAGS, PERMISSIONS.VIEW_REPORTS, PERMISSIONS.VIEW_AUDIT],
-  [ROLES.IMPLEMENTING_AGENCY]: [PERMISSIONS.VIEW_PROJECTS, PERMISSIONS.CREATE_PROJECT, PERMISSIONS.EDIT_PROJECT, PERMISSIONS.SUBMIT_PROJECT],
+  [ROLES.CITIZEN]: [
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.VIEW_PROJECTS,
+    PERMISSIONS.VIEW_REPORTS,
+  ],
+  [ROLES.DISTRICT_AUTHORITY]: [
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.VIEW_PROJECTS,
+    PERMISSIONS.CREATE_PROJECT,
+    PERMISSIONS.EDIT_PROJECT,
+    PERMISSIONS.SUBMIT_PROJECT,
+    PERMISSIONS.REVIEW_PROJECT,
+    PERMISSIONS.APPROVE_PROJECT,
+    PERMISSIONS.REJECT_PROJECT,
+    PERMISSIONS.VIEW_FLAGS,
+    PERMISSIONS.REVIEW_FLAGS,
+    PERMISSIONS.VIEW_REPORTS,
+    PERMISSIONS.EXPORT_REPORTS,
+    PERMISSIONS.VIEW_AUDIT,
+  ],
   [ROLES.ADMIN]: Object.values(PERMISSIONS),
 };
 
 export const ROLE_LANDING: Record<Role, string> = {
-  [ROLES.MP]: "/projects",
+  [ROLES.CITIZEN]: "/dashboard",
   [ROLES.DISTRICT_AUTHORITY]: "/dashboard",
-  [ROLES.IMPLEMENTING_AGENCY]: "/projects/new",
   [ROLES.ADMIN]: "/dashboard",
 };
 
 export const ROLE_LABELS: Record<Role, string> = {
-  [ROLES.MP]: "Member of Parliament",
+  [ROLES.CITIZEN]: "Citizen Portal",
   [ROLES.DISTRICT_AUTHORITY]: "District Authority",
-  [ROLES.IMPLEMENTING_AGENCY]: "Implementing Agency",
   [ROLES.ADMIN]: "System Administrator",
 };
 
 export function normalizeRole(value: unknown): Role | null {
   if (typeof value !== "string") return null;
-  return Object.values(ROLES).find((role) => role.toLowerCase() === value.trim().toLowerCase()) ?? null;
+  const trimmed = value.trim().toLowerCase();
+  if (trimmed === "citizen" || trimmed === "public") return ROLES.CITIZEN;
+  if (trimmed === "admin" || trimmed === "system administrator" || trimmed === "administrator") return ROLES.ADMIN;
+  if (trimmed.includes("district") || trimmed.includes("authority") || trimmed === "mp" || trimmed.includes("agency")) return ROLES.DISTRICT_AUTHORITY;
+  return Object.values(ROLES).find((role) => role.toLowerCase() === trimmed) ?? null;
 }
 
 export function can(role: Role | null, permission: Permission) {
@@ -116,10 +134,9 @@ export const isAdminOrDistrictAuthority = (role: Role | null) => role === ROLES.
 export const navGroups = [{ label: "Workspace", items: NAV_ITEMS.slice(0, 5) }, { label: "Administration", items: NAV_ITEMS.slice(5) }];
 export const focusRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0b323] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f6f8fb]";
 export const roleLandingCopy: Record<Role, string> = {
-  [ROLES.ADMIN]: "System oversight and platform administration",
-  [ROLES.DISTRICT_AUTHORITY]: "Review district projects, approvals, and risk signals",
-  [ROLES.MP]: "Track constituency proposals and project delivery",
-  [ROLES.IMPLEMENTING_AGENCY]: "Prepare and submit project proposals",
+  [ROLES.CITIZEN]: "Public fund utilization, project tracking & transparency portal",
+  [ROLES.DISTRICT_AUTHORITY]: "Review district projects, approvals, financial tracking & risk signals",
+  [ROLES.ADMIN]: "System oversight, RBAC governance, user administration & platform control",
 };
 
 export const routeStubCopy = "This route is connected to the protected application shell and reserved for the next implementation phase.";

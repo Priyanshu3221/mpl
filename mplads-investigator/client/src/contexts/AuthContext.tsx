@@ -1,7 +1,7 @@
 import { ClerkProvider, useAuth, useUser } from "@clerk/clerk-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { can, landingFor, normalizeRole, type Permission, type Role, ROLE_LABELS } from "@/constants/permissions";
+import { can, landingFor, normalizeRole, permissionForPath, type Permission, type Role, ROLES, ROLE_LABELS } from "@/constants/permissions";
 
 export const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
 
@@ -18,9 +18,47 @@ function AuthLoading() {
   return <div className="flex min-h-[40vh] items-center justify-center p-6"><div className="w-full max-w-md space-y-4"><div className="h-3 w-24 animate-pulse rounded bg-[#dce5ee]"/><div className="h-10 w-3/4 animate-pulse rounded bg-[#dce5ee]"/><div className="h-24 animate-pulse rounded bg-[#e9eff4]"/></div></div>;
 }
 
+export function setRoleOverride(role: Role | null) {
+  if (role) {
+    localStorage.setItem("mplads.active_role_override", role);
+  } else {
+    localStorage.removeItem("mplads.active_role_override");
+  }
+  window.dispatchEvent(new Event("mplads-role-changed"));
+}
+
+export function switchWorkspaceRole(newRole: Role, currentPathname: string, setLocation: (path: string) => void) {
+  setRoleOverride(newRole);
+  const reqPermission = permissionForPath(currentPathname);
+  if (reqPermission && !can(newRole, reqPermission)) {
+    setLocation(landingFor(newRole));
+  }
+}
+
 export function useCurrentRole(): Role | null {
-  const { user } = useUser();
-  return normalizeRole(user?.publicMetadata?.role);
+  const { user, isLoaded } = useUser();
+  const [overrideRole, setOverrideRole] = useState<Role | null>(() => {
+    const saved = localStorage.getItem("mplads.active_role_override") as Role | null;
+    return saved ? normalizeRole(saved) : null;
+  });
+
+  useEffect(() => {
+    const handleStorage = () => {
+      const saved = localStorage.getItem("mplads.active_role_override") as Role | null;
+      setOverrideRole(saved ? normalizeRole(saved) : null);
+    };
+    window.addEventListener("mplads-role-changed", handleStorage);
+    window.addEventListener("storage", handleStorage);
+    return () => {
+      window.removeEventListener("mplads-role-changed", handleStorage);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
+
+  if (overrideRole) return overrideRole;
+  if (!isLoaded) return null;
+  if (!user) return null;
+  return normalizeRole(user.publicMetadata?.role) ?? ROLES.DISTRICT_AUTHORITY;
 }
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -32,11 +70,17 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 export function RoleProtectedRoute({ permission, children }: { permission: Permission; children: React.ReactNode }) {
+  const { isLoaded } = useAuth();
   const role = useCurrentRole();
   const [, setLocation] = useLocation();
-  useEffect(() => { if (role && !can(role, permission)) setLocation("/access-denied"); }, [role, permission, setLocation]);
-  if (!role) return <AuthLoading />;
-  if (!can(role, permission)) return <AuthLoading />;
+  useEffect(() => {
+    if (isLoaded && role && !can(role, permission)) {
+      setLocation("/access-denied");
+    }
+  }, [isLoaded, role, permission, setLocation]);
+
+  if (!isLoaded || !role) return <AuthLoading />;
+  if (!can(role, permission)) return null;
   return <>{children}</>;
 }
 
