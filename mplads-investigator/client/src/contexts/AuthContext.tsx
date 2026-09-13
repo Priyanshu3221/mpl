@@ -58,7 +58,7 @@ export function useCurrentRole(): Role | null {
   if (overrideRole) return overrideRole;
   if (!isLoaded) return null;
   if (!user) return null;
-  return normalizeRole(user.publicMetadata?.role) ?? ROLES.DISTRICT_AUTHORITY;
+  return normalizeRole(user.publicMetadata?.role);
 }
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {

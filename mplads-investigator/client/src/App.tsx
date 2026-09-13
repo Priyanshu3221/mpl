@@ -34,9 +34,11 @@ export default function App() {
     <Switch>
       <Route path="/"><LandingPage /></Route>
       <Route path="/sign-in"><AuthPage mode="sign-in" /></Route>
+      <Route path="/sign-in/:nest*"><AuthPage mode="sign-in" /></Route>
       <Route path="/sign-up"><AuthPage mode="sign-up" /></Route>
-      <Route path="/access-denied"><AccessDeniedPage /></Route>
-      <Route path="/404"><NotFoundPage /></Route>
+      <Route path="/sign-up/:nest*"><AuthPage mode="sign-up" /></Route>
+      <Route path="/access-denied">{shell(<AccessDeniedPage />)}</Route>
+      <Route path="/404">{shell(<NotFoundPage />)}</Route>
       <Route path="/dashboard">{shell(<DashboardPage />, PERMISSIONS.VIEW_DASHBOARD)}</Route>
       <Route path="/projects">{shell(<ProjectsPage />, PERMISSIONS.VIEW_PROJECTS)}</Route>
       <Route path="/projects/new">{shell(<ProjectCreatePage />, PERMISSIONS.CREATE_PROJECT)}</Route>

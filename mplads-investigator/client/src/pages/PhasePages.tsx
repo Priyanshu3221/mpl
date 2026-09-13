@@ -161,7 +161,8 @@ export function RouteStub({ title }: { title: string }) { return <section classN
 export function AccessDeniedPage() {
   const [, setLocation] = useLocation();
   const role = useCurrentRole();
-  const roleName = role ? ROLE_LABELS[role] : "Citizen Portal";
+  const isUnassigned = !role;
+  const roleName = role ? ROLE_LABELS[role] : "Role Assignment Pending";
   const landingPath = landingFor(role);
 
   return (
@@ -172,9 +173,13 @@ export function AccessDeniedPage() {
         </div>
 
         <div>
-          <h1 className="text-2xl font-semibold text-[#102a43]">Access restricted</h1>
+          <h1 className="text-2xl font-semibold text-[#102a43]">
+            {isUnassigned ? "Role Assignment Pending" : "Access restricted"}
+          </h1>
           <p className="mt-2 text-sm leading-6 text-[#607387]">
-            You don't have permission to view this module with your current role (<strong className="text-[#102a43]">{roleName}</strong>).
+            {isUnassigned
+              ? "Your account authentication succeeded, but an official role has not been assigned to your user metadata yet."
+              : `You don't have permission to view this module with your current role (${roleName}).`}
           </p>
         </div>
 
@@ -183,7 +188,7 @@ export function AccessDeniedPage() {
             Switch Demo Workspace
           </p>
           <p className="text-xs text-[#607387]">
-            Select another prototype role to test access to this feature:
+            Select a prototype role below to test access to application features:
           </p>
           <select
             value={role || ROLES.CITIZEN}
@@ -201,10 +206,16 @@ export function AccessDeniedPage() {
 
         <div className="pt-2">
           <button
-            onClick={() => setLocation(landingPath)}
+            onClick={() => {
+              if (isUnassigned) {
+                switchWorkspaceRole(ROLES.CITIZEN, "/dashboard", setLocation);
+              } else {
+                setLocation(landingPath);
+              }
+            }}
             className={`w-full rounded-md bg-[#102a43] px-4 py-3 text-sm font-semibold text-white hover:bg-[#193c59] transition-colors ${focusRing}`}
           >
-            Return to {roleName} Workspace
+            {isUnassigned ? "Explore Citizen Portal Workspace" : `Return to ${roleName} Workspace`}
           </button>
         </div>
       </div>
