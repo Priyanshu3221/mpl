@@ -1,7 +1,7 @@
 import { SignIn, SignUp, useAuth, UserButton } from "@clerk/clerk-react";
 import { ArrowRight, LockKeyhole, ShieldAlert, Network, FileText, CheckCircle2, ShieldCheck, Eye, Layers } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { RedirectSignedIn, useCurrentRole, switchWorkspaceRole } from "@/contexts/AuthContext";
+import { RedirectSignedIn, useCurrentRole, UserIdentity } from "@/contexts/AuthContext";
 import { AUTH_DISCLAIMER, APP_NAME, APP_TITLE, DATA_SOURCE_NOTE, DEFERRED_MODULES, ROLE_LABELS, roleLandingCopy, landingFor, ROLES, type Role, focusRing } from "@/constants/permissions";
 
 export function LandingPage() {
@@ -213,6 +213,7 @@ export function RouteStub({ title }: { title: string }) { return <section classN
 export function AccessDeniedPage() {
   const [, setLocation] = useLocation();
   const role = useCurrentRole();
+  const { email, roleLabel } = UserIdentity();
   const isUnassigned = !role;
   const roleName = role ? ROLE_LABELS[role] : "Role Assignment Pending";
   const landingPath = landingFor(role);
@@ -231,43 +232,29 @@ export function AccessDeniedPage() {
           <p className="mt-2 text-sm leading-6 text-[#607387]">
             {isUnassigned
               ? "Your account authentication succeeded, but an official role has not been assigned to your user metadata yet."
-              : `You don't have permission to view this module with your current role (${roleName}).`}
+              : `You don't have permission to view this module with your assigned role (${roleName}).`}
           </p>
         </div>
 
-        <div className="rounded-md border border-[#dce5ee] bg-[#f8fafc] p-4 text-left space-y-3">
+        <div className="rounded-md border border-[#dce5ee] bg-[#f8fafc] p-4 text-left space-y-2">
           <p className="text-xs font-bold uppercase tracking-wider text-[#b27b00]">
-            Switch Demo Workspace
+            Authenticated Identity
           </p>
-          <p className="text-xs text-[#607387]">
-            Select a prototype role below to test access to application features:
+          <div className="text-xs space-y-1">
+            <p><span className="text-[#607387]">Account Email:</span> <strong className="text-[#102a43] truncate block">{email}</strong></p>
+            <p><span className="text-[#607387]">Assigned Role:</span> <strong className="text-[#102a43]">{roleName}</strong></p>
+          </div>
+          <p className="text-[11px] text-[#607387] pt-1">
+            Roles are assigned strictly based on server email configuration.
           </p>
-          <select
-            value={role || ROLES.CITIZEN}
-            onChange={(e) => {
-              const newRole = e.target.value as Role;
-              switchWorkspaceRole(newRole, window.location.pathname, setLocation);
-            }}
-            className="w-full rounded-md border border-[#dce5ee] bg-white px-3 py-2 text-xs font-semibold text-[#102a43] focus:outline-none focus:ring-2 focus:ring-[#f0b323] cursor-pointer"
-          >
-            <option value={ROLES.CITIZEN}>Citizen (Public Portal)</option>
-            <option value={ROLES.DISTRICT_AUTHORITY}>District Authority</option>
-            <option value={ROLES.ADMIN}>System Administrator</option>
-          </select>
         </div>
 
         <div className="pt-2">
           <button
-            onClick={() => {
-              if (isUnassigned) {
-                switchWorkspaceRole(ROLES.CITIZEN, "/dashboard", setLocation);
-              } else {
-                setLocation(landingPath);
-              }
-            }}
+            onClick={() => setLocation(landingPath)}
             className={`w-full rounded-md bg-[#102a43] px-4 py-3 text-sm font-semibold text-white hover:bg-[#193c59] transition-colors ${focusRing}`}
           >
-            {isUnassigned ? "Explore Citizen Portal Workspace" : `Return to ${roleName} Workspace`}
+            Return to {roleName} Workspace
           </button>
         </div>
       </div>

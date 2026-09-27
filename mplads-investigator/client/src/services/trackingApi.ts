@@ -1,4 +1,4 @@
-import axios from "axios";
+import { api } from "./apiClient";
 import { getProjectById } from "@/services/projectApi";
 import { trackingFor, type ProjectTracking } from "@/services/mock/trackingMock";
 import { can, type Role, type Permission } from "@/constants/permissions";
@@ -6,7 +6,6 @@ import { can, type Role, type Permission } from "@/constants/permissions";
 const useMock = import.meta.env.VITE_USE_MOCK !== "false";
 const trackingEndpoint = import.meta.env.VITE_TRACKING_API_ENDPOINT as string | undefined;
 const storageEndpoint = import.meta.env.VITE_STORAGE_UPLOAD_ENDPOINT as string | undefined;
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080/api", timeout: 8000 });
 const updateKey = "mplads.tracking-updates.v1";
 export type ProgressUpdatePayload = { physicalProgress: number; utilizedAmount: number; updateDate: string; remarks: string; document?: { name: string; type: string; size: number } };
 export type ProgressUpdateResult = { source: "api" | "mock"; tracking: ProjectTracking; message: string };

@@ -1,11 +1,10 @@
-import axios from "axios";
+import { api } from "./apiClient";
 import { activity, financialTrend, flags, projects, users, type MockFlag, type MockProject } from "@/services/mock/dashboardMock";
 
 export type DashboardData = { projects: MockProject[]; flags: MockFlag[]; users: typeof users; activity: typeof activity; financialTrend: typeof financialTrend };
 export type DashboardQuery = { fy?: string; state?: string; status?: string; severity?: string };
 
 const useMock = import.meta.env.VITE_USE_MOCK !== "false";
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080/api", timeout: 8000 });
 
 export async function getDashboardData(query: DashboardQuery = {}): Promise<DashboardData> {
   if (!useMock) {

@@ -1,11 +1,7 @@
-import axios from "axios";
+import { api } from "./apiClient";
 import { mockReportRows, type ReportRow } from "@/services/mock/reportsMock";
 
 const useMock = import.meta.env.VITE_USE_MOCK !== "false";
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080/api",
-  timeout: 8000,
-});
 
 export async function getReports(): Promise<ReportRow[]> {
   if (!useMock) {

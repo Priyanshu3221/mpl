@@ -18,7 +18,7 @@ import {
   Scale,
   Accessibility,
 } from "lucide-react";
-import { useCurrentRole, UserIdentity, switchWorkspaceRole } from "@/contexts/AuthContext";
+import { useCurrentRole, UserIdentity } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ConsentModal from "@/components/ConsentModal";
 import {
@@ -46,7 +46,7 @@ const iconMap: Record<string, typeof LayoutDashboard> = {
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const role = useCurrentRole();
-  const { roleLabel } = UserIdentity();
+  const { email, roleLabel } = UserIdentity();
   const { language, setLanguage, t } = useLanguage();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -119,12 +119,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
 
-          {/* Prototype Workspace Switcher & Language Controls */}
+          {/* Authenticated Workspace Identity & Language Controls */}
           <div className="px-4 py-3 mx-3 my-3 rounded-md bg-[#071a2c]/70 border border-white/10 text-xs">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] uppercase font-bold text-[#f0b323] tracking-wider">
-                  Switch Workspace
+                  Workspace Identity
                 </p>
                 <button
                   onClick={() => setLanguage(language === "EN" ? "HI" : "EN")}
@@ -135,19 +135,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 </button>
               </div>
 
-              <select
-                value={role || ROLES.DISTRICT_AUTHORITY}
-                onChange={(e) => switchWorkspaceRole(e.target.value as Role, location, setLocation)}
-                className="w-full bg-[#071a2c] text-[#e2ecf5] border border-white/20 rounded px-2 py-1.5 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#f0b323] cursor-pointer"
-                title="Select prototype demo workspace role"
-              >
-                <option value={ROLES.CITIZEN}>Citizen (Public Portal)</option>
-                <option value={ROLES.DISTRICT_AUTHORITY}>District Authority</option>
-                <option value={ROLES.ADMIN}>System Administrator</option>
-              </select>
-              <p className="text-[10px] text-[#8ea5b8]">
-                Current: <span className="font-semibold text-white">{role ? ROLE_LABELS[role] : roleLabel}</span>
-              </p>
+              <div>
+                <p className="text-[10px] text-[#8ea5b8]">Account Email</p>
+                <p className="font-semibold text-white truncate text-xs" title={email}>
+                  {email}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-[10px] text-[#8ea5b8]">Assigned Role</p>
+                <span className="inline-block mt-0.5 rounded bg-[#277da1]/40 border border-[#277da1]/60 px-2 py-0.5 text-[11px] font-bold text-white">
+                  {role ? ROLE_LABELS[role] : roleLabel}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -253,7 +253,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
             <div className="flex items-center gap-2 border-l border-[#dce5ee] pl-4">
               <UserButton showName={false} />
-              <span className="text-xs font-semibold text-[#102a43]">Workspace Account</span>
+              <div className="text-xs">
+                <span className="block font-semibold text-[#102a43] truncate max-w-[180px]" title={email}>{email}</span>
+                <span className="block text-[10px] text-[#607387]">{role ? ROLE_LABELS[role] : roleLabel}</span>
+              </div>
             </div>
           </div>
         </header>

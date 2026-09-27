@@ -1,13 +1,9 @@
-import axios from "axios";
+import { api } from "./apiClient";
 import { mockManagedUsers, type ManagedUser } from "@/services/mock/usersMock";
 import { type Role } from "@/constants/permissions";
 import { recordAuditAction } from "@/services/auditApi";
 
 const useMock = import.meta.env.VITE_USE_MOCK !== "false";
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080/api",
-  timeout: 8000,
-});
 
 const storageKey = "mplads.users.v1";
 

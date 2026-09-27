@@ -1,10 +1,9 @@
-import axios from "axios";
+import { api } from "./apiClient";
 import type { MockProject, ProjectStatus } from "@/services/mock/dashboardMock";
 
 export type WorkflowAction = { to: ProjectStatus; label: string; permission: "SUBMIT_PROJECT" | "REVIEW_PROJECT" | "APPROVE_PROJECT" | "REJECT_PROJECT"; requiresRemark: boolean };
 export type WorkflowTransition = { projectId: string; from: ProjectStatus; to: ProjectStatus; remark: string; actorRole: string; timestamp: string };
 const useMock = import.meta.env.VITE_USE_MOCK !== "false";
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080/api", timeout: 8000 });
 const stateKey = "mplads.workflow.v1";
 const auditKey = "mplads.audit.v1";
 const transitions: Partial<Record<ProjectStatus, WorkflowAction[]>> = {

@@ -1,11 +1,7 @@
-import axios from "axios";
+import { api } from "./apiClient";
 import { mockCollusionPairs, type CollusionPair, type CollusionStatus } from "@/services/mock/collusionMock";
 
 const useMock = import.meta.env.VITE_USE_MOCK !== "false";
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080/api",
-  timeout: 8000,
-});
 
 const storageKey = "mplads.collusion.v1";
 const auditKey = "mplads.audit.v1";

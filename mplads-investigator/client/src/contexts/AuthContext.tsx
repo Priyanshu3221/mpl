@@ -1,7 +1,9 @@
 import { ClerkProvider, useAuth, useUser } from "@clerk/clerk-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useLocation } from "wouter";
+import { useState } from "react";
 import { can, landingFor, normalizeRole, permissionForPath, type Permission, type Role, ROLES, ROLE_LABELS } from "@/constants/permissions";
+import { api, setApiClientTokenGetter } from "@/services/apiClient";
 
 export const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
 
@@ -18,46 +20,33 @@ function AuthLoading() {
   return <div className="flex min-h-[40vh] items-center justify-center p-6"><div className="w-full max-w-md space-y-4"><div className="h-3 w-24 animate-pulse rounded bg-[#dce5ee]"/><div className="h-10 w-3/4 animate-pulse rounded bg-[#dce5ee]"/><div className="h-24 animate-pulse rounded bg-[#e9eff4]"/></div></div>;
 }
 
-export function setRoleOverride(role: Role | null) {
-  if (role) {
-    localStorage.setItem("mplads.active_role_override", role);
-  } else {
-    localStorage.removeItem("mplads.active_role_override");
-  }
-  window.dispatchEvent(new Event("mplads-role-changed"));
-}
-
-export function switchWorkspaceRole(newRole: Role, currentPathname: string, setLocation: (path: string) => void) {
-  setRoleOverride(newRole);
-  const reqPermission = permissionForPath(currentPathname);
-  if (reqPermission && !can(newRole, reqPermission)) {
-    setLocation(landingFor(newRole));
-  }
-}
-
 export function useCurrentRole(): Role | null {
   const { user, isLoaded } = useUser();
-  const [overrideRole, setOverrideRole] = useState<Role | null>(() => {
-    const saved = localStorage.getItem("mplads.active_role_override") as Role | null;
-    return saved ? normalizeRole(saved) : null;
-  });
+  const { getToken } = useAuth();
+  const [serverRole, setServerRole] = useState<Role | null>(null);
 
   useEffect(() => {
-    const handleStorage = () => {
-      const saved = localStorage.getItem("mplads.active_role_override") as Role | null;
-      setOverrideRole(saved ? normalizeRole(saved) : null);
-    };
-    window.addEventListener("mplads-role-changed", handleStorage);
-    window.addEventListener("storage", handleStorage);
-    return () => {
-      window.removeEventListener("mplads-role-changed", handleStorage);
-      window.removeEventListener("storage", handleStorage);
-    };
-  }, []);
+    if (isLoaded && user) {
+      setApiClientTokenGetter(() => getToken());
+      let isMounted = true;
+      api
+        .get<{ authenticated: boolean; role: Role }>("/auth/me")
+        .then((res) => {
+          if (isMounted && res.data?.role) {
+            setServerRole(normalizeRole(res.data.role));
+          }
+        })
+        .catch(() => {
+          // Non-blocking fallback
+        });
+      return () => {
+        isMounted = false;
+      };
+    }
+  }, [isLoaded, user, getToken]);
 
-  if (overrideRole) return overrideRole;
-  if (!isLoaded) return null;
-  if (!user) return null;
+  if (!isLoaded || !user) return null;
+  if (serverRole) return serverRole;
   return normalizeRole(user.publicMetadata?.role) ?? ROLES.CITIZEN;
 }
 
@@ -116,7 +105,8 @@ export function RedirectSignedIn() {
 export function UserIdentity() {
   const { user } = useUser();
   const role = useCurrentRole();
-  return { user, role, roleLabel: role ? ROLE_LABELS[role] : "Role not assigned" };
+  const email = user?.primaryEmailAddress?.emailAddress || "Unauthenticated";
+  return { user, email, role, roleLabel: role ? ROLE_LABELS[role] : "Role not assigned" };
 }
 
 export function useCan(permission: Permission) { return can(useCurrentRole(), permission); }

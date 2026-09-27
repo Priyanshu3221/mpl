@@ -1,4 +1,4 @@
-import axios from "axios";
+import { api } from "./apiClient";
 import { projects, type MockProject } from "@/services/mock/dashboardMock";
 import { applyWorkflowState } from "@/services/workflowApi";
 
@@ -6,7 +6,6 @@ export type ProjectQuery = { search?: string; fy?: string; state?: string; statu
 export type ProposalPayload = { projectName: string; description: string; category: string; type: string; state: string; district: string; constituency: string; localBody: string; locality: string; address: string; latitude: string; longitude: string; estimatedCost: number; requestedAmount: number; sanctionedAmount: number; fundingDetails: string; agencyName: string; department: string; contactName: string; contactEmail: string; contactPhone: string; supportingInfo: string; documents: Array<{ name: string; size: number; type: string }> };
 export type ProposalRecord = ProposalPayload & { id: string; status: "Draft" | "Submitted"; createdAt: string; updatedAt: string };
 const useMock = import.meta.env.VITE_USE_MOCK !== "false";
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080/api", timeout: 8000 });
 const proposalKey = "mplads.proposals.v1";
 
 function readProposals() { try { return JSON.parse(window.localStorage.getItem(proposalKey) || "[]") as ProposalRecord[]; } catch { return []; } }

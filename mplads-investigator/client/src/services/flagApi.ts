@@ -1,13 +1,21 @@
-import axios from "axios";
+import { api } from "./apiClient";
 import { flags, type MockFlag } from "@/services/mock/dashboardMock";
 
 export type FlagReviewAction = "dismissed" | "escalated" | "false_positive";
 export type FlagReviewPayload = { action: FlagReviewAction; remark: string; reason?: string };
 const useMock = import.meta.env.VITE_USE_MOCK !== "false";
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080/api", timeout: 8000 });
 
 export async function getFlags() {
   if (!useMock) return (await api.get<MockFlag[]>("/flags")).data;
+  await new Promise((resolve) => window.setTimeout(resolve, 250));
+  return flags;
+}
+
+export async function triggerDetectionEngine() {
+  if (!useMock) {
+    const response = await api.post<{ authorized: boolean; flags: MockFlag[] }>("/flags/detect");
+    return response.data.flags;
+  }
   await new Promise((resolve) => window.setTimeout(resolve, 250));
   return flags;
 }
