@@ -9,7 +9,14 @@ const useMock = import.meta.env.VITE_USE_MOCK !== "false";
 export async function getDashboardData(query: DashboardQuery = {}): Promise<DashboardData> {
   if (!useMock) {
     const response = await api.get<DashboardData>("/dashboard", { params: query });
-    return response.data;
+    const d = response.data || ({} as Partial<DashboardData>);
+    return {
+      projects: Array.isArray(d.projects) ? d.projects : [],
+      flags: Array.isArray(d.flags) ? d.flags : [],
+      users: Array.isArray(d.users) ? d.users : users,
+      activity: Array.isArray(d.activity) ? d.activity : activity,
+      financialTrend: Array.isArray(d.financialTrend) ? d.financialTrend : financialTrend,
+    };
   }
   await new Promise((resolve) => window.setTimeout(resolve, 300));
   return { projects, flags, users, activity, financialTrend };

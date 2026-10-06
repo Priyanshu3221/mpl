@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from "react";
 import { Switch, Route, Redirect } from "wouter";
 import { ProtectedRoute, RoleProtectedRoute } from "@/contexts/AuthContext";
 import AppShell from "@/layouts/AppShell";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { PERMISSIONS } from "@/constants/permissions";
 
 const LandingPage = lazy(() => import("@/pages/PhasePages").then((m) => ({ default: m.LandingPage })));
@@ -40,13 +41,14 @@ const shell = (page: React.ReactNode, permission?: (typeof PERMISSIONS)[keyof ty
   <ProtectedRoute>
     {permission ? (
       <RoleProtectedRoute permission={permission}>
-        <AppShell>{page}</AppShell>
+        <AppShell><ErrorBoundary>{page}</ErrorBoundary></AppShell>
       </RoleProtectedRoute>
     ) : (
-      <AppShell>{page}</AppShell>
+      <AppShell><ErrorBoundary>{page}</ErrorBoundary></AppShell>
     )}
   </ProtectedRoute>
 );
+
 
 export default function App() {
   return (

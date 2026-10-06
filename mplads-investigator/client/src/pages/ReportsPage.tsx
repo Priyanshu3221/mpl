@@ -28,7 +28,7 @@ export default function ReportsPage() {
     setLoading(true);
     setError(false);
     getReports()
-      .then(setRows)
+      .then((res) => setRows(Array.isArray(res) ? res : []))
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   };

@@ -22,7 +22,7 @@ export async function getAuditLogs(entityId?: string): Promise<AuditLogEntry[]> 
   if (!useMock) {
     const url = entityId ? `/audit?entityId=${entityId}` : "/audit";
     const res = await api.get<AuditLogEntry[]>(url);
-    allLogs = res.data;
+    allLogs = Array.isArray(res.data) ? res.data : [];
   } else {
     await new Promise((resolve) => setTimeout(resolve, 250));
     const localLogs = readLocalStorageLogs();

@@ -6,7 +6,10 @@ export type FlagReviewPayload = { action: FlagReviewAction; remark: string; reas
 const useMock = import.meta.env.VITE_USE_MOCK !== "false";
 
 export async function getFlags() {
-  if (!useMock) return (await api.get<MockFlag[]>("/flags")).data;
+  if (!useMock) {
+    const res = await api.get<MockFlag[]>("/flags");
+    return Array.isArray(res.data) ? res.data : [];
+  }
   await new Promise((resolve) => window.setTimeout(resolve, 250));
   return flags;
 }

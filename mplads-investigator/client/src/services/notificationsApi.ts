@@ -16,7 +16,7 @@ function readReadState(): Record<string, boolean> {
 export async function getNotifications(): Promise<SystemNotification[]> {
   if (!useMock) {
     const res = await api.get<SystemNotification[]>("/notifications");
-    return res.data;
+    return Array.isArray(res.data) ? res.data : [];
   }
   await new Promise((resolve) => setTimeout(resolve, 200));
   const readMap = readReadState();

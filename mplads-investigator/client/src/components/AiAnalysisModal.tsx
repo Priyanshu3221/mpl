@@ -103,7 +103,7 @@ export default function AiAnalysisModal({ type, targetId, targetName = "", flag,
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#607387]">Key Risk Indicators</h3>
               <ul className="mt-1.5 space-y-1 text-xs text-[#152536]">
-                {flagAnalysis.keyIndicators.map((ind, idx) => (
+                {(flagAnalysis.keyIndicators || []).map((ind, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#a34d4d] shrink-0" />
                     <span>{ind}</span>
@@ -153,7 +153,7 @@ export default function AiAnalysisModal({ type, targetId, targetName = "", flag,
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#607387]">Key Action Items</h3>
               <ul className="mt-1.5 space-y-1 text-xs text-[#152536]">
-                {projectSummary.keyActionItems.map((act, idx) => (
+                {(projectSummary.keyActionItems || []).map((act, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#277da1] shrink-0" />
                     <span>{act}</span>

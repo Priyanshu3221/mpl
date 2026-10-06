@@ -46,7 +46,7 @@ function writeAuditLog(entry: {
 export async function getCollusionPairs(): Promise<CollusionPair[]> {
   if (!useMock) {
     const res = await api.get<CollusionPair[]>("/collusion/pairs");
-    return res.data;
+    return Array.isArray(res.data) ? res.data : [];
   }
   await new Promise((resolve) => setTimeout(resolve, 300));
   const stored = readStoredPairs();

@@ -18,7 +18,7 @@ function readStoredUsers(): Record<string, Partial<ManagedUser>> {
 export async function getUsers(): Promise<ManagedUser[]> {
   if (!useMock) {
     const res = await api.get<ManagedUser[]>("/users");
-    return res.data;
+    return Array.isArray(res.data) ? res.data : [];
   }
   await new Promise((resolve) => setTimeout(resolve, 200));
   const stored = readStoredUsers();

@@ -6,7 +6,7 @@ const useMock = import.meta.env.VITE_USE_MOCK !== "false";
 export async function getReports(): Promise<ReportRow[]> {
   if (!useMock) {
     const res = await api.get<ReportRow[]>("/reports");
-    return res.data;
+    return Array.isArray(res.data) ? res.data : [];
   }
   await new Promise((resolve) => setTimeout(resolve, 250));
   return mockReportRows;

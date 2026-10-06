@@ -145,7 +145,7 @@ export default function UsersPage() {
     setLoading(true);
     setError(false);
     getUsers()
-      .then(setUsers)
+      .then((res) => setUsers(Array.isArray(res) ? res : []))
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   };

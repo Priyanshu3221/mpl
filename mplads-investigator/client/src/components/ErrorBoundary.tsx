@@ -1,9 +1,9 @@
-import { cn } from "@/lib/utils";
-import { AlertTriangle, RotateCcw } from "lucide-react";
 import { Component, ReactNode } from "react";
+import { AlertTriangle, RotateCcw } from "lucide-react";
 
 interface Props {
   children: ReactNode;
+  fallback?: ReactNode;
 }
 
 interface State {
@@ -21,35 +21,43 @@ class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("ErrorBoundary caught an unhandled rendering error:", error, errorInfo);
+  }
+
+  resetError = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
       return (
-        <div className="flex items-center justify-center min-h-screen p-8 bg-background">
-          <div className="flex flex-col items-center w-full max-w-2xl p-8">
-            <AlertTriangle
-              size={48}
-              className="text-destructive mb-6 flex-shrink-0"
-            />
-
-            <h2 className="text-xl mb-4">An unexpected error occurred.</h2>
-
-            <div className="p-4 w-full rounded bg-muted overflow-auto mb-6">
-              <pre className="text-sm text-muted-foreground whitespace-break-spaces">
-                {this.state.error?.stack}
-              </pre>
+        <div className="flex items-center justify-center p-8 bg-[#fff9f9] border border-[#e7c9c9] rounded-lg my-4 text-[#102a43]">
+          <div className="flex flex-col items-center w-full max-w-xl text-center">
+            <AlertTriangle size={36} className="text-[#a34d4d] mb-4 shrink-0" />
+            <h2 className="text-lg font-semibold text-[#7c3030] mb-2">An unexpected frontend rendering error occurred</h2>
+            <p className="text-xs text-[#8b5b5b] mb-4 max-w-md">
+              {this.state.error?.message || "Component failed to render cleanly. You can attempt to retry the view."}
+            </p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={this.resetError}
+                className="flex items-center gap-2 px-4 py-2 rounded-md bg-[#102a43] text-white hover:bg-[#193c59] text-xs font-semibold transition-colors"
+              >
+                <RotateCcw size={14} />
+                Try Again
+              </button>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 rounded-md border border-[#dce5ee] bg-white text-[#607387] hover:bg-[#f1f5f8] text-xs font-semibold"
+              >
+                Reload Page
+              </button>
             </div>
-
-            <button
-              onClick={() => window.location.reload()}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg",
-                "bg-primary text-primary-foreground",
-                "hover:opacity-90 cursor-pointer"
-              )}
-            >
-              <RotateCcw size={16} />
-              Reload Page
-            </button>
           </div>
         </div>
       );
@@ -60,3 +68,4 @@ class ErrorBoundary extends Component<Props, State> {
 }
 
 export default ErrorBoundary;
+
