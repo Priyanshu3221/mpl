@@ -1,4 +1,4 @@
-import { getPrincipal } from "../server/authz";
+import { getPrincipal } from "../server/authz.js";
 
 /**
  * Vercel equivalent of GET /api/me in server/index.ts.
