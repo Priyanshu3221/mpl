@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { UserButton } from "@clerk/clerk-react";
+import { UserButton, useUser } from "@clerk/clerk-react";
 import {
   LayoutDashboard,
   FolderKanban,
@@ -18,7 +18,7 @@ import {
   Scale,
   Accessibility,
 } from "lucide-react";
-import { useCurrentRole, UserIdentity } from "@/contexts/AuthContext";
+import { useCurrentRole, UserIdentity, useRoleState, useSwitchWorkspaceRole } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ConsentModal from "@/components/ConsentModal";
 import {
@@ -44,9 +44,12 @@ const iconMap: Record<string, typeof LayoutDashboard> = {
 };
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const [location, setLocation] = useLocation();
+  const [location] = useLocation();
   const role = useCurrentRole();
-  const { email, roleLabel } = UserIdentity();
+  const { canImpersonate, impersonatedRole, isBootstrapAdmin } = useRoleState();
+  const switchWorkspaceRole = useSwitchWorkspaceRole();
+  const { roleLabel } = UserIdentity();
+  const { user } = useUser();
   const { language, setLanguage, t } = useLanguage();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -65,6 +68,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     if (pathname.startsWith("/flags")) return "Fraud Risk Signals";
     if (pathname.startsWith("/reports")) return "Investigation Reports";
     if (pathname.startsWith("/notifications")) return "System Notifications";
+    if (pathname.startsWith("/profile")) return "My Profile";
     if (pathname.startsWith("/users")) return "User & Role Management";
     if (pathname.startsWith("/audit")) return "System Audit Trail";
     if (pathname.startsWith("/compliance")) return "Compliance Statement";
@@ -119,12 +123,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
 
-          {/* Authenticated Workspace Identity & Language Controls */}
+          {/* Assigned Workspace & Language Controls */}
           <div className="px-4 py-3 mx-3 my-3 rounded-md bg-[#071a2c]/70 border border-white/10 text-xs">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] uppercase font-bold text-[#f0b323] tracking-wider">
-                  Workspace Identity
+                  Assigned Workspace
                 </p>
                 <button
                   onClick={() => setLanguage(language === "EN" ? "HI" : "EN")}
@@ -135,19 +139,54 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 </button>
               </div>
 
-              <div>
-                <p className="text-[10px] text-[#8ea5b8]">Account Email</p>
-                <p className="font-semibold text-white truncate text-xs" title={email}>
-                  {email}
-                </p>
+              {/*
+                Read-only. The role comes from the authenticated session, so it
+                is deliberately not selectable here. Admins running a demo build
+                get the switcher below instead.
+              */}
+              <div className="flex items-center gap-2 rounded border border-white/20 bg-[#071a2c] px-2 py-1.5">
+                <ShieldCheck size={13} className="shrink-0 text-[#f0b323]" />
+                <span className="truncate text-xs font-semibold text-[#e2ecf5]">
+                  {role ? ROLE_LABELS[role] : "Role not assigned"}
+                </span>
+                {isBootstrapAdmin && (
+                  <span
+                    className="ml-auto shrink-0 rounded bg-[#a34d4d]/30 border border-[#a34d4d]/60 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#ffb4b4]"
+                    title="This Admin role comes from the local-dev BOOTSTRAP_ADMIN_EMAIL override, not an official assignment. It never applies in production."
+                  >
+                    Dev bootstrap
+                  </span>
+                )}
               </div>
 
-              <div>
-                <p className="text-[10px] text-[#8ea5b8]">Assigned Role</p>
-                <span className="inline-block mt-0.5 rounded bg-[#277da1]/40 border border-[#277da1]/60 px-2 py-0.5 text-[11px] font-bold text-white">
-                  {role ? ROLE_LABELS[role] : roleLabel}
-                </span>
-              </div>
+              {canImpersonate ? (
+                <div className="space-y-1 border-t border-white/10 pt-2">
+                  <label
+                    htmlFor="demo-role-select"
+                    className="block text-[10px] font-bold uppercase tracking-wider text-[#8ea5b8]"
+                  >
+                    Admin demo view
+                  </label>
+                  <select
+                    id="demo-role-select"
+                    value={impersonatedRole ?? ""}
+                    onChange={(e) => switchWorkspaceRole((e.target.value || null) as Role | null)}
+                    className="w-full cursor-pointer rounded border border-white/20 bg-[#071a2c] px-2 py-1.5 text-xs font-semibold text-[#e2ecf5] focus:outline-none focus:ring-1 focus:ring-[#f0b323]"
+                    title="Preview the workspace as another role (Admin only)"
+                  >
+                    <option value="">My role ({ROLE_LABELS[ROLES.ADMIN]})</option>
+                    <option value={ROLES.MP}>Member of Parliament</option>
+                    <option value={ROLES.DISTRICT_AUTHORITY}>District Authority</option>
+                    <option value={ROLES.IMPLEMENTING_AGENCY}>Implementing Agency</option>
+                    <option value={ROLES.CITIZEN}>Citizen</option>
+                  </select>
+                  <p className="text-[10px] leading-4 text-[#8ea5b8]">
+                    Development build only. Preview only — the server still authorizes every action as {ROLE_LABELS[ROLES.ADMIN]}.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-[10px] text-[#8ea5b8]">{roleLabel} is set by your account.</p>
+              )}
             </div>
           </div>
 
@@ -221,13 +260,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
 
-          <div className="flex items-center gap-3 overflow-hidden border-t border-white/10 pt-3">
+          <Link
+            href="/profile"
+            onClick={() => setMobileOpen(false)}
+            className={`flex items-center gap-3 overflow-hidden rounded-md border-t border-white/10 pt-3 hover:bg-white/5 ${focusRing}`}
+          >
             <UserButton showName={false} />
             <div className="truncate text-xs">
-              <p className="font-semibold text-white truncate">User Workspace</p>
-              <p className="text-[10px] text-[#8ea5b8] truncate">Connected via Clerk</p>
+              <p className="font-semibold text-white truncate">{user?.fullName || user?.primaryEmailAddress?.emailAddress || "Workspace Account"}</p>
+              <p className="text-[10px] text-[#8ea5b8] truncate">{role ? ROLE_LABELS[role] : roleLabel}</p>
             </div>
-          </div>
+          </Link>
         </div>
       </aside>
 
@@ -251,13 +294,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <Bell size={18} />
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#f0b323]" />
             </Link>
-            <div className="flex items-center gap-2 border-l border-[#dce5ee] pl-4">
+            <Link href="/profile" className={`flex items-center gap-2 border-l border-[#dce5ee] pl-4 hover:opacity-80 ${focusRing}`}>
               <UserButton showName={false} />
-              <div className="text-xs">
-                <span className="block font-semibold text-[#102a43] truncate max-w-[180px]" title={email}>{email}</span>
-                <span className="block text-[10px] text-[#607387]">{role ? ROLE_LABELS[role] : roleLabel}</span>
-              </div>
-            </div>
+              <span className="text-xs font-semibold text-[#102a43]">{user?.fullName || "Workspace Account"}</span>
+            </Link>
           </div>
         </header>
 

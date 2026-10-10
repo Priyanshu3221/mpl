@@ -171,7 +171,7 @@ export default function CollusionPage() {
     setLoading(true);
     setError(false);
     getCollusionPairs()
-      .then((res) => setPairs(Array.isArray(res) ? res : []))
+      .then(setPairs)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   };

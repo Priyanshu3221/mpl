@@ -1,11 +1,90 @@
 import { SignIn, SignUp, useAuth, UserButton } from "@clerk/clerk-react";
-import { ArrowRight, LockKeyhole, ShieldAlert, Network, FileText, CheckCircle2, ShieldCheck, Eye, Layers } from "lucide-react";
+import { ArrowRight, LockKeyhole, ShieldAlert, Network, FileText, CheckCircle2, ShieldCheck, Eye, Layers, Database, Sparkles, ScanSearch, LayoutDashboard } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { RedirectSignedIn, useCurrentRole, UserIdentity } from "@/contexts/AuthContext";
-import { AUTH_DISCLAIMER, APP_NAME, APP_TITLE, DATA_SOURCE_NOTE, DEFERRED_MODULES, ROLE_LABELS, roleLandingCopy, landingFor, ROLES, type Role, focusRing } from "@/constants/permissions";
+import { motion, useInView, animate } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { RedirectSignedIn, useCurrentRole } from "@/contexts/AuthContext";
+import { AUTH_DISCLAIMER, APP_NAME, APP_TITLE, DATA_SOURCE_NOTE, DEFERRED_MODULES, ROLE_LABELS, roleLandingCopy, landingFor, type Role, focusRing } from "@/constants/permissions";
+import { projects as mockProjects, flags as mockFlags, financialTrend } from "@/services/mock/dashboardMock";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0 },
+};
+
+function Reveal({ children, delay = 0, className }: { children: React.ReactNode; delay?: number; className?: string }) {
+  return (
+    <motion.div
+      className={className}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, margin: "-60px" }}
+      variants={fadeUp}
+      transition={{ duration: 0.45, delay, ease: "easeOut" }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function CountUpStat({ value, label, prefix = "", suffix = "" }: { value: number; label: string; prefix?: string; suffix?: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-40px" });
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    const controls = animate(0, value, {
+      duration: 1.3,
+      ease: "easeOut",
+      onUpdate: (latest) => setDisplay(Math.round(latest)),
+    });
+    return () => controls.stop();
+  }, [inView, value]);
+
+  return (
+    <div>
+      <p ref={ref} className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+        {prefix}{display.toLocaleString("en-IN")}{suffix}
+      </p>
+      <p className="mt-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#b7c7d5]">{label}</p>
+    </div>
+  );
+}
+
+const howItWorksSteps = [
+  {
+    step: "01",
+    title: "MPLADS Data",
+    icon: Database,
+    description: "Ingest project, financial, and beneficiary records from the public MPLADS eSAKSHI data source.",
+  },
+  {
+    step: "02",
+    title: "Data Cleaning & Standardisation",
+    icon: Sparkles,
+    description: "Normalize inconsistent formats, states, agencies, and financial fields into a consistent structured schema.",
+  },
+  {
+    step: "03",
+    title: "Rule / Anomaly Detection + Risk Scoring",
+    icon: ScanSearch,
+    description: "Apply fraud-detection rules and scoring models to flag cost overruns, procurement delays, and collusion signals.",
+  },
+  {
+    step: "04",
+    title: "Investigator Dashboard",
+    icon: LayoutDashboard,
+    description: "Surface prioritized, role-aware insights for MPs, District Authorities, Implementing Agencies, and Admins to act on.",
+  },
+];
 
 export function LandingPage() {
   const { isSignedIn } = useAuth();
+  const totalProjects = mockProjects.length;
+  const totalFlags = mockFlags.length;
+  const statesCovered = new Set(mockProjects.map((project) => project.state)).size;
+  const totalFundsCr = Math.round(financialTrend.reduce((sum, item) => sum + item.allocated, 0));
 
   return (
     <main className="min-h-screen bg-[#071a2c] text-white">
@@ -68,10 +147,21 @@ export function LandingPage() {
           </div>
 
           <p className="mt-8 text-xs text-[#8ea5b8]">{DATA_SOURCE_NOTE}</p>
+
+          <div className="mt-10 grid grid-cols-2 gap-6 border-t border-white/10 pt-8 sm:grid-cols-4">
+            <CountUpStat value={totalProjects} label="Projects monitored" />
+            <CountUpStat value={totalFlags} label="Fraud signals flagged" />
+            <CountUpStat value={statesCovered} label="States covered" />
+            <CountUpStat value={totalFundsCr} prefix="₹" suffix=" Cr" label="Funds tracked" />
+          </div>
         </div>
 
         {/* Feature Overview Card */}
-        <div className="relative overflow-hidden rounded-lg border border-white/10 bg-[#102a43] p-7 shadow-2xl sm:p-10">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
+          className="relative overflow-hidden rounded-lg border border-white/10 bg-[#102a43] p-7 shadow-2xl sm:p-10">
           <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-[#f0b323]/10 blur-3xl" />
           <div className="relative space-y-6">
             <div className="flex items-center justify-between border-b border-white/10 pb-5">
@@ -101,10 +191,10 @@ export function LandingPage() {
             </div>
 
             <div className="rounded-md border border-white/10 bg-[#071a2c]/60 p-4 text-xs leading-6 text-[#c5d3df]">
-              <span className="font-bold text-[#f0b323]">Role-Based Access:</span> Customized views tailored for Members of Parliament, District Authorities, Implementing Agencies, and System Administrators.
+              <span className="font-bold text-[#f0b323]">Role-Based Access:</span> Customized views tailored for Members of Parliament, District Authorities, Implementing Agencies, and Admins.
             </div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Capabilities Grid */}
@@ -116,7 +206,7 @@ export function LandingPage() {
           </div>
 
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-md border border-white/10 bg-[#102a43] p-6">
+            <Reveal className="rounded-md border border-white/10 bg-[#102a43] p-6" delay={0}>
               <div className="flex h-10 w-10 items-center justify-center rounded bg-[#277da1]/20 text-[#277da1]">
                 <ShieldAlert size={20} />
               </div>
@@ -124,9 +214,9 @@ export function LandingPage() {
               <p className="mt-2 text-xs leading-5 text-[#b7c7d5]">
                 Automated rule checking for cost overruns, rapid disbursements, and statutory threshold violations.
               </p>
-            </div>
+            </Reveal>
 
-            <div className="rounded-md border border-white/10 bg-[#102a43] p-6">
+            <Reveal className="rounded-md border border-white/10 bg-[#102a43] p-6" delay={0.06}>
               <div className="flex h-10 w-10 items-center justify-center rounded bg-[#f0b323]/20 text-[#f0b323]">
                 <Network size={20} />
               </div>
@@ -134,9 +224,9 @@ export function LandingPage() {
               <p className="mt-2 text-xs leading-5 text-[#b7c7d5]">
                 Linkage analysis identifying shared directors, overlapping bank accounts, and synchronized cover bids.
               </p>
-            </div>
+            </Reveal>
 
-            <div className="rounded-md border border-white/10 bg-[#102a43] p-6">
+            <Reveal className="rounded-md border border-white/10 bg-[#102a43] p-6" delay={0.12}>
               <div className="flex h-10 w-10 items-center justify-center rounded bg-[#45a879]/20 text-[#45a879]">
                 <FileText size={20} />
               </div>
@@ -144,9 +234,9 @@ export function LandingPage() {
               <p className="mt-2 text-xs leading-5 text-[#b7c7d5]">
                 Generate district fund utilization summaries, agency completion rates, and export data in CSV format.
               </p>
-            </div>
+            </Reveal>
 
-            <div className="rounded-md border border-white/10 bg-[#102a43] p-6">
+            <Reveal className="rounded-md border border-white/10 bg-[#102a43] p-6" delay={0.18}>
               <div className="flex h-10 w-10 items-center justify-center rounded bg-[#9b5142]/20 text-[#f58e7b]">
                 <Eye size={20} />
               </div>
@@ -154,7 +244,36 @@ export function LandingPage() {
               <p className="mt-2 text-xs leading-5 text-[#b7c7d5]">
                 Timestamped, actor-attributed logs for every status transition, review remark, and user action.
               </p>
-            </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="border-t border-white/10 bg-[#071a2c] px-5 py-16 sm:px-10">
+        <div className="mx-auto max-w-7xl">
+          <Reveal className="text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#f0b323]">Pipeline</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">How It Works</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[#b7c7d5]">
+              From raw public records to prioritized, actionable oversight — in four stages.
+            </p>
+          </Reveal>
+
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {howItWorksSteps.map((item, index) => (
+              <Reveal key={item.step} delay={index * 0.08} className="relative rounded-md border border-white/10 bg-[#0a2238] p-6">
+                <span className="text-xs font-bold tracking-[0.2em] text-[#f0b323]">{item.step}</span>
+                <div className="mt-3 flex h-10 w-10 items-center justify-center rounded bg-[#277da1]/20 text-[#277da1]">
+                  <item.icon size={20} />
+                </div>
+                <h3 className="mt-4 text-base font-semibold">{item.title}</h3>
+                <p className="mt-2 text-xs leading-5 text-[#b7c7d5]">{item.description}</p>
+                {index < howItWorksSteps.length - 1 && (
+                  <ArrowRight size={16} className="absolute -right-3 top-1/2 hidden -translate-y-1/2 text-[#3a5670] lg:block" />
+                )}
+              </Reveal>
+            ))}
           </div>
         </div>
       </section>
@@ -213,7 +332,6 @@ export function RouteStub({ title }: { title: string }) { return <section classN
 export function AccessDeniedPage() {
   const [, setLocation] = useLocation();
   const role = useCurrentRole();
-  const { email, roleLabel } = UserIdentity();
   const isUnassigned = !role;
   const roleName = role ? ROLE_LABELS[role] : "Role Assignment Pending";
   const landingPath = landingFor(role);
@@ -227,36 +345,50 @@ export function AccessDeniedPage() {
 
         <div>
           <h1 className="text-2xl font-semibold text-[#102a43]">
-            {isUnassigned ? "Role Assignment Pending" : "Access restricted"}
+            {isUnassigned ? "Session role could not be resolved" : "Access restricted"}
           </h1>
           <p className="mt-2 text-sm leading-6 text-[#607387]">
             {isUnassigned
-              ? "Your account authentication succeeded, but an official role has not been assigned to your user metadata yet."
-              : `You don't have permission to view this module with your assigned role (${roleName}).`}
+              ? "Your account authentication succeeded, but this device could not confirm your role. New accounts are normally given Citizen access automatically — this usually clears up on retry."
+              : `You don't have permission to view this module with your current role (${roleName}).`}
           </p>
         </div>
 
+        {/*
+          No role selector here. A user's role is assigned to their account and
+          cannot be changed from this screen; offering a picker was the original
+          privilege-escalation path.
+        */}
         <div className="rounded-md border border-[#dce5ee] bg-[#f8fafc] p-4 text-left space-y-2">
           <p className="text-xs font-bold uppercase tracking-wider text-[#b27b00]">
-            Authenticated Identity
+            {isUnassigned ? "What to do" : "Your assigned role"}
           </p>
-          <div className="text-xs space-y-1">
-            <p><span className="text-[#607387]">Account Email:</span> <strong className="text-[#102a43] truncate block">{email}</strong></p>
-            <p><span className="text-[#607387]">Assigned Role:</span> <strong className="text-[#102a43]">{roleName}</strong></p>
-          </div>
-          <p className="text-[11px] text-[#607387] pt-1">
-            Roles are assigned strictly based on server email configuration.
+          <p className="text-xs leading-5 text-[#607387]">
+            {isUnassigned
+              ? "Try reloading the page. If this keeps happening, an administrator can check your account in User Management."
+              : `You are signed in as ${roleName}. Access to other workspaces is granted by an administrator, not selected here.`}
           </p>
         </div>
 
-        <div className="pt-2">
-          <button
-            onClick={() => setLocation(landingPath)}
-            className={`w-full rounded-md bg-[#102a43] px-4 py-3 text-sm font-semibold text-white hover:bg-[#193c59] transition-colors ${focusRing}`}
-          >
-            Return to {roleName} Workspace
-          </button>
-        </div>
+        {isUnassigned ? (
+          <div className="pt-2">
+            <button
+              onClick={() => window.location.reload()}
+              className={`w-full rounded-md bg-[#102a43] px-4 py-3 text-sm font-semibold text-white hover:bg-[#193c59] transition-colors ${focusRing}`}
+            >
+              Reload
+            </button>
+          </div>
+        ) : (
+          <div className="pt-2">
+            <button
+              onClick={() => setLocation(landingPath)}
+              className={`w-full rounded-md bg-[#102a43] px-4 py-3 text-sm font-semibold text-white hover:bg-[#193c59] transition-colors ${focusRing}`}
+            >
+              Return to {roleName} Workspace
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

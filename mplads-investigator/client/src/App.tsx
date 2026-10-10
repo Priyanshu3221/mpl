@@ -2,14 +2,12 @@ import React, { lazy, Suspense } from "react";
 import { Switch, Route, Redirect } from "wouter";
 import { ProtectedRoute, RoleProtectedRoute } from "@/contexts/AuthContext";
 import AppShell from "@/layouts/AppShell";
-import ErrorBoundary from "@/components/ErrorBoundary";
 import { PERMISSIONS } from "@/constants/permissions";
 
 const LandingPage = lazy(() => import("@/pages/PhasePages").then((m) => ({ default: m.LandingPage })));
 const AuthPage = lazy(() => import("@/pages/PhasePages").then((m) => ({ default: m.AuthPage })));
 const AccessDeniedPage = lazy(() => import("@/pages/PhasePages").then((m) => ({ default: m.AccessDeniedPage })));
 const NotFoundPage = lazy(() => import("@/pages/PhasePages").then((m) => ({ default: m.NotFoundPage })));
-const RouteStub = lazy(() => import("@/pages/PhasePages").then((m) => ({ default: m.RouteStub })));
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const FlagsPage = lazy(() => import("@/pages/FlagsPage"));
@@ -21,6 +19,7 @@ const ProjectTrackingPage = lazy(() => import("@/pages/ProjectTrackingPage"));
 const ReportsPage = lazy(() => import("@/pages/ReportsPage"));
 const NotificationsPage = lazy(() => import("@/pages/NotificationsPage"));
 const UsersPage = lazy(() => import("@/pages/UsersPage"));
+const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 const AuditPage = lazy(() => import("@/pages/AuditPage"));
 const CompliancePage = lazy(() => import("@/pages/CompliancePage"));
 const AccessibilityPage = lazy(() => import("@/pages/AccessibilityPage"));
@@ -41,14 +40,13 @@ const shell = (page: React.ReactNode, permission?: (typeof PERMISSIONS)[keyof ty
   <ProtectedRoute>
     {permission ? (
       <RoleProtectedRoute permission={permission}>
-        <AppShell><ErrorBoundary>{page}</ErrorBoundary></AppShell>
+        <AppShell>{page}</AppShell>
       </RoleProtectedRoute>
     ) : (
-      <AppShell><ErrorBoundary>{page}</ErrorBoundary></AppShell>
+      <AppShell>{page}</AppShell>
     )}
   </ProtectedRoute>
 );
-
 
 export default function App() {
   return (
@@ -65,13 +63,12 @@ export default function App() {
         <Route path="/projects">{shell(<ProjectsPage />, PERMISSIONS.VIEW_PROJECTS)}</Route>
         <Route path="/projects/new">{shell(<ProjectCreatePage />, PERMISSIONS.CREATE_PROJECT)}</Route>
         <Route path="/projects/:id">{shell(<ProjectDetailPage />, PERMISSIONS.VIEW_PROJECTS)}</Route>
-        <Route path="/projects/:id/edit">{shell(<RouteStub title="Edit project" />, PERMISSIONS.EDIT_PROJECT)}</Route>
         <Route path="/projects/:id/track">{shell(<ProjectTrackingPage />, PERMISSIONS.VIEW_PROJECTS)}</Route>
         <Route path="/flags">{shell(<FlagsPage />, PERMISSIONS.VIEW_FLAGS)}</Route>
         <Route path="/flags/collusion">{shell(<CollusionPage />, PERMISSIONS.REVIEW_FLAGS)}</Route>
         <Route path="/reports">{shell(<ReportsPage />, PERMISSIONS.VIEW_REPORTS)}</Route>
         <Route path="/notifications">{shell(<NotificationsPage />)}</Route>
-        <Route path="/profile">{shell(<RouteStub title="Profile" />)}</Route>
+        <Route path="/profile">{shell(<ProfilePage />)}</Route>
         <Route path="/users">{shell(<UsersPage />, PERMISSIONS.MANAGE_USERS)}</Route>
         <Route path="/audit">{shell(<AuditPage />, PERMISSIONS.VIEW_AUDIT)}</Route>
         <Route path="/compliance">{shell(<CompliancePage />)}</Route>

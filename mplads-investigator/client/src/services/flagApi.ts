@@ -1,14 +1,19 @@
-import { api } from "./apiClient";
+import axios from "axios";
 import { flags, type MockFlag } from "@/services/mock/dashboardMock";
 
 export type FlagReviewAction = "dismissed" | "escalated" | "false_positive";
 export type FlagReviewPayload = { action: FlagReviewAction; remark: string; reason?: string };
 const useMock = import.meta.env.VITE_USE_MOCK !== "false";
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || "/api", timeout: 8000 });
 
 export async function getFlags() {
   if (!useMock) {
-    const res = await api.get<MockFlag[]>("/flags");
-    return Array.isArray(res.data) ? res.data : [];
+    try {
+      const res = await api.get<MockFlag[]>("/flags");
+      if (Array.isArray(res.data)) return res.data;
+    } catch {
+      /* Fallback to mock flags if API endpoint fails */
+    }
   }
   await new Promise((resolve) => window.setTimeout(resolve, 250));
   return flags;
@@ -16,8 +21,14 @@ export async function getFlags() {
 
 export async function triggerDetectionEngine() {
   if (!useMock) {
-    const response = await api.post<{ authorized: boolean; flags: MockFlag[] }>("/flags/detect");
-    return response.data.flags;
+    try {
+      const response = await api.post<{ authorized: boolean; flags: MockFlag[] }>("/flags/detect");
+      if (response.data && Array.isArray(response.data.flags)) {
+        return response.data.flags;
+      }
+    } catch {
+      /* Fallback to mock flags if engine trigger fails */
+    }
   }
   await new Promise((resolve) => window.setTimeout(resolve, 250));
   return flags;

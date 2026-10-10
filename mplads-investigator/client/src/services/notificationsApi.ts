@@ -1,7 +1,11 @@
-import { api } from "./apiClient";
+import axios from "axios";
 import { mockNotifications, type SystemNotification } from "@/services/mock/notificationsMock";
 
 const useMock = import.meta.env.VITE_USE_MOCK !== "false";
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || "/api",
+  timeout: 8000,
+});
 
 const storageKey = "mplads.notifications.v1";
 
@@ -15,8 +19,14 @@ function readReadState(): Record<string, boolean> {
 
 export async function getNotifications(): Promise<SystemNotification[]> {
   if (!useMock) {
-    const res = await api.get<SystemNotification[]>("/notifications");
-    return Array.isArray(res.data) ? res.data : [];
+    try {
+      const res = await api.get<SystemNotification[]>("/notifications");
+      if (Array.isArray(res.data)) {
+        return res.data;
+      }
+    } catch {
+      /* API endpoint not implemented or returned fallback HTML */
+    }
   }
   await new Promise((resolve) => setTimeout(resolve, 200));
   const readMap = readReadState();

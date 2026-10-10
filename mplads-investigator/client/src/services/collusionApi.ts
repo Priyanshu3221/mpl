@@ -1,7 +1,13 @@
-import { api } from "./apiClient";
+import axios from "axios";
 import { mockCollusionPairs, type CollusionPair, type CollusionStatus } from "@/services/mock/collusionMock";
+import { assertPermission } from "@/services/sessionApi";
+import { PERMISSIONS } from "@/constants/permissions";
 
 const useMock = import.meta.env.VITE_USE_MOCK !== "false";
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || "/api",
+  timeout: 8000,
+});
 
 const storageKey = "mplads.collusion.v1";
 const auditKey = "mplads.audit.v1";
@@ -46,7 +52,7 @@ function writeAuditLog(entry: {
 export async function getCollusionPairs(): Promise<CollusionPair[]> {
   if (!useMock) {
     const res = await api.get<CollusionPair[]>("/collusion/pairs");
-    return Array.isArray(res.data) ? res.data : [];
+    return res.data;
   }
   await new Promise((resolve) => setTimeout(resolve, 300));
   const stored = readStoredPairs();
@@ -64,6 +70,7 @@ export async function reviewCollusionPair(
   remark: string,
   actorRole = "District Authority"
 ): Promise<CollusionPair> {
+  await assertPermission(PERMISSIONS.REVIEW_FLAGS);
   if (remark.trim().length < 15) {
     throw new Error("A reviewer remark of at least 15 characters is required for the audit trail.");
   }

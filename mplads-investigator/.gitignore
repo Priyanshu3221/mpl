@@ -6,3 +6,5 @@ dist/
 .manus-logs/
 .vscode/
 pnpm-lock.yaml
+.vercel
+.env*

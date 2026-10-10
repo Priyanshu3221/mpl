@@ -9,15 +9,15 @@
 import { spawn } from "node:child_process";
 
 const isWindows = process.platform === "win32";
-const npmExec = isWindows ? "npx.cmd" : "npx";
+const npmExec = isWindows ? "npm.cmd" : "npm";
 
 function run(name, command, args) {
-  // Windows needs shell:true to resolve .cmd files (npx.cmd) at all, but
+  // Windows needs shell:true to resolve .cmd files (npm.cmd) at all, but
   // passing shell:true together with an args array is deprecated (DEP0190)
   // because the args aren't escaped, just concatenated. Since our args are
   // fixed literals we control (no user input), join them into one command
   // string ourselves on Windows instead, and skip the shell entirely on
-  // POSIX where spawn can run "npx" directly.
+  // POSIX where spawn can run "npm" directly.
   const child = isWindows
     ? spawn([command, ...args].join(" "), { stdio: "inherit", shell: true, env: process.env })
     : spawn(command, args, { stdio: "inherit", env: process.env });
@@ -43,5 +43,5 @@ function shutdown(code) {
 process.on("SIGINT", () => shutdown(0));
 process.on("SIGTERM", () => shutdown(0));
 
-children.push(run("api", npmExec, ["tsx", "watch", "server/index.ts"]));
-children.push(run("web", npmExec, ["vite", "--host"]));
+children.push(run("api", npmExec, ["run", "dev:server"]));
+children.push(run("web", "node", ["node_modules/vite/bin/vite.js", "--host"]));

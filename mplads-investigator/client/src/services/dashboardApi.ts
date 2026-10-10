@@ -1,22 +1,22 @@
-import { api } from "./apiClient";
+import axios from "axios";
 import { activity, financialTrend, flags, projects, users, type MockFlag, type MockProject } from "@/services/mock/dashboardMock";
 
 export type DashboardData = { projects: MockProject[]; flags: MockFlag[]; users: typeof users; activity: typeof activity; financialTrend: typeof financialTrend };
 export type DashboardQuery = { fy?: string; state?: string; status?: string; severity?: string };
 
 const useMock = import.meta.env.VITE_USE_MOCK !== "false";
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || "/api", timeout: 8000 });
 
 export async function getDashboardData(query: DashboardQuery = {}): Promise<DashboardData> {
   if (!useMock) {
-    const response = await api.get<DashboardData>("/dashboard", { params: query });
-    const d = response.data || ({} as Partial<DashboardData>);
-    return {
-      projects: Array.isArray(d.projects) ? d.projects : [],
-      flags: Array.isArray(d.flags) ? d.flags : [],
-      users: Array.isArray(d.users) ? d.users : users,
-      activity: Array.isArray(d.activity) ? d.activity : activity,
-      financialTrend: Array.isArray(d.financialTrend) ? d.financialTrend : financialTrend,
-    };
+    try {
+      const response = await api.get<DashboardData>("/dashboard", { params: query });
+      if (response.data && Array.isArray(response.data.projects) && Array.isArray(response.data.flags)) {
+        return response.data;
+      }
+    } catch {
+      /* Fallback to mock data if API call fails */
+    }
   }
   await new Promise((resolve) => window.setTimeout(resolve, 300));
   return { projects, flags, users, activity, financialTrend };

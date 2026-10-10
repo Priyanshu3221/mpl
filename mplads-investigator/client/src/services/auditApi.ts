@@ -1,7 +1,13 @@
-import { api } from "./apiClient";
+import axios from "axios";
 import { mockAuditLogs, type AuditLogEntry } from "@/services/mock/auditMock";
+import { assertPermission } from "@/services/sessionApi";
+import { PERMISSIONS } from "@/constants/permissions";
 
 const useMock = import.meta.env.VITE_USE_MOCK !== "false";
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || "/api",
+  timeout: 8000,
+});
 
 const auditKey = "mplads.audit.v1";
 
@@ -18,11 +24,13 @@ function readLocalStorageLogs(): AuditLogEntry[] {
 }
 
 export async function getAuditLogs(entityId?: string): Promise<AuditLogEntry[]> {
+  // The audit trail is restricted; the backend verifies the session role.
+  await assertPermission(PERMISSIONS.VIEW_AUDIT);
   let allLogs: AuditLogEntry[] = [];
   if (!useMock) {
     const url = entityId ? `/audit?entityId=${entityId}` : "/audit";
     const res = await api.get<AuditLogEntry[]>(url);
-    allLogs = Array.isArray(res.data) ? res.data : [];
+    allLogs = res.data;
   } else {
     await new Promise((resolve) => setTimeout(resolve, 250));
     const localLogs = readLocalStorageLogs();

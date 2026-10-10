@@ -85,6 +85,15 @@ def detect_demo():
     df = make_synthetic_data()
     return JSONResponse(content=run_all_checks(df))
 
+@app.get("/detect/local")
+def detect_local():
+    """Runs detection on the local mplads_clean_data.csv file."""
+    try:
+        df = pd.read_csv("mplads_clean_data.csv")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Could not read local data file: {e}")
+    return JSONResponse(content=run_all_checks(df))
+
 
 @app.post("/detect")
 async def detect(file: UploadFile = File(...)):

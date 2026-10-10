@@ -48,7 +48,7 @@ export default function AuditPage() {
     setLoading(true);
     setError(false);
     getAuditLogs()
-      .then((res) => setLogs(Array.isArray(res) ? res : []))
+      .then(setLogs)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   };

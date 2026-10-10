@@ -203,7 +203,7 @@ function vitePluginStorageProxy(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginStorageProxy()];
+const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginStorageProxy()];
 
 export default defineConfig({
   plugins,
@@ -246,6 +246,19 @@ export default defineConfig({
     fs: {
       strict: true,
       deny: ["**/.*"],
+    },
+    // In dev, `npm run dev` starts BOTH this Vite server and the Express API
+    // server (see scripts/dev.mjs), the latter on :8080. Without this proxy,
+    // relative calls like fetch("/api/me") resolve against Vite's own :3000
+    // (which has no such route), 404 silently, and every session — including
+    // a configured BOOTSTRAP_ADMIN_EMAIL account — falls back to the Citizen
+    // default. Override the target with API_PROXY_TARGET if the API server
+    // runs on a different port.
+    proxy: {
+      "/api": {
+        target: process.env.API_PROXY_TARGET || "http://localhost:8080",
+        changeOrigin: true,
+      },
     },
   },
 });

@@ -8,31 +8,26 @@ interface AiAnalysisModalProps {
   type: "flag" | "project";
   targetId: string;
   targetName?: string;
-  flag?: Record<string, any>;
   onClose: () => void;
 }
 
-export default function AiAnalysisModal({ type, targetId, targetName = "", flag, onClose }: AiAnalysisModalProps) {
+export default function AiAnalysisModal({ type, targetId, targetName = "", onClose }: AiAnalysisModalProps) {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [flagAnalysis, setFlagAnalysis] = useState<AiRiskAnalysis | null>(null);
   const [projectSummary, setProjectSummary] = useState<AiProjectSummary | null>(null);
 
   useEffect(() => {
     setLoading(true);
-    setError(null);
     if (type === "flag") {
-      explainRiskFlag(targetId, flag)
+      explainRiskFlag(targetId)
         .then(setFlagAnalysis)
-        .catch((err) => setError(err instanceof Error ? err.message : "Failed to generate AI explanation."))
         .finally(() => setLoading(false));
     } else {
       summarizeProjectAI(targetId, targetName)
         .then(setProjectSummary)
-        .catch((err) => setError(err instanceof Error ? err.message : "Failed to generate project summary."))
         .finally(() => setLoading(false));
     }
-  }, [type, targetId, targetName, flag]);
+  }, [type, targetId, targetName]);
 
   return (
     <div
@@ -51,10 +46,10 @@ export default function AiAnalysisModal({ type, targetId, targetName = "", flag,
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#b27b00]">
-                  {flagAnalysis?.modelIdentifier?.includes("Gemini") ? "Gemini AI Risk Insight" : "AI-Assisted Insight"}
+                  Demo AI-Assisted Insight
                 </span>
                 <span className="rounded bg-[#f0b323]/10 border border-[#f0b323]/30 px-2 py-0.5 text-[10px] font-extrabold text-[#b27b00]">
-                  {flagAnalysis?.modelIdentifier?.includes("Gemini") ? "LIVE GEMINI MODEL" : "ADVISORY ONLY"}
+                  ADVISORY ONLY · MOCK MODEL
                 </span>
               </div>
               <h2 id="ai-modal-title" className="text-lg font-semibold text-[#102a43]">
@@ -72,14 +67,7 @@ export default function AiAnalysisModal({ type, targetId, targetName = "", flag,
         </div>
 
         {/* Content */}
-        {error ? (
-          <div className="my-6 rounded-md border border-[#e7c9c9] bg-[#fff9f9] p-4 text-xs space-y-2">
-            <div className="flex items-center gap-2 font-bold text-[#8c3636]">
-              <AlertTriangle size={16} /> AI Request Failed
-            </div>
-            <p className="text-[#8c3636] leading-relaxed">{error}</p>
-          </div>
-        ) : loading ? (
+        {loading ? (
           <div className="py-12 text-center space-y-3">
             <Bot size={36} className="mx-auto text-[#277da1] animate-bounce" />
             <p className="text-sm font-semibold text-[#102a43]">Generating AI Investigation Insights…</p>
@@ -103,7 +91,7 @@ export default function AiAnalysisModal({ type, targetId, targetName = "", flag,
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#607387]">Key Risk Indicators</h3>
               <ul className="mt-1.5 space-y-1 text-xs text-[#152536]">
-                {(flagAnalysis.keyIndicators || []).map((ind, idx) => (
+                {flagAnalysis.keyIndicators.map((ind, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#a34d4d] shrink-0" />
                     <span>{ind}</span>
@@ -153,7 +141,7 @@ export default function AiAnalysisModal({ type, targetId, targetName = "", flag,
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#607387]">Key Action Items</h3>
               <ul className="mt-1.5 space-y-1 text-xs text-[#152536]">
-                {(projectSummary.keyActionItems || []).map((act, idx) => (
+                {projectSummary.keyActionItems.map((act, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#277da1] shrink-0" />
                     <span>{act}</span>

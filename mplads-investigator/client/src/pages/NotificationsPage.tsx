@@ -37,7 +37,7 @@ export default function NotificationsPage() {
     setLoading(true);
     setError(false);
     getNotifications()
-      .then((res) => setItems(Array.isArray(res) ? res : []))
+      .then((data) => setItems(Array.isArray(data) ? data : []))
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   };

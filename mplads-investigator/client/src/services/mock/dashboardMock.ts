@@ -48,7 +48,7 @@ export interface MockFlag {
 
 export const users = [
   { id: "USR-001", name: "Ramesh Kumar", role: "District Authority", email: "ramesh.k@mplads.gov.in" },
-  { id: "USR-002", name: "Priya Sharma", role: "Member of Parliament", email: "priya.s@sansad.in" },
+  { id: "USR-002", name: "Priya Sharma", role: "MP", email: "priya.s@sansad.in" },
   { id: "USR-003", name: "Amitav Roy", role: "Implementing Agency", email: "amitav.roy@pwd.gov.in" },
   { id: "USR-004", name: "Sunita Verma", role: "Admin", email: "admin@mplads.gov.in" }
 ];

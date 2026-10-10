@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { getUsers, updateUserRole, updateUserStatus } from "@/services/usersApi";
 import { type ManagedUser } from "@/services/mock/usersMock";
-import { type Role, ROLES, ROLE_LABELS, focusRing } from "@/constants/permissions";
+import { type Role, ROLES, ROLE_LABELS, roleLandingCopy, focusRing } from "@/constants/permissions";
 import { useCurrentRole } from "@/contexts/AuthContext";
 
 function RoleModal({
@@ -97,13 +97,7 @@ function RoleModal({
                 />
                 <div>
                   <p className="text-xs font-bold text-[#102a43]">{ROLE_LABELS[r]}</p>
-                  <p className="text-[11px] text-[#607387]">
-                    {r === "Admin"
-                      ? "Full administrative access across all modules & RBAC governance"
-                      : r === "District Authority"
-                      ? "Project reviews, approvals, risk flags & audit reports"
-                      : "Public fund tracking, project search & transparency access"}
-                  </p>
+                  <p className="text-[11px] text-[#607387]">{roleLandingCopy[r]}</p>
                 </div>
               </label>
             ))}
@@ -145,7 +139,7 @@ export default function UsersPage() {
     setLoading(true);
     setError(false);
     getUsers()
-      .then((res) => setUsers(Array.isArray(res) ? res : []))
+      .then(setUsers)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   };
@@ -255,9 +249,9 @@ export default function UsersPage() {
               className="w-full rounded-md border border-[#dce5ee] px-3 py-2 text-sm text-[#152536] outline-none focus:border-[#277da1] focus:ring-2 focus:ring-[#277da1]/20"
             >
               <option value="All">All Roles</option>
-              <option value="Citizen">Citizen Portal</option>
-              <option value="District Authority">District Authority</option>
-              <option value="Admin">Administrator</option>
+              {Object.values(ROLES).map((r) => (
+                <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+              ))}
             </select>
           </div>
         </div>
