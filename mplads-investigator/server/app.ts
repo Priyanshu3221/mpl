@@ -6,16 +6,23 @@ import { requireAuth, requirePermission, type AuthedRequest } from "./authz.js";
 import { isValidPermission, normalizeRole, PERMISSIONS, TRANSITION_PERMISSIONS, can } from "../shared/roles.js";
 import { clerkAdminConfigured, listClerkUsers, setUserActiveInClerk, setUserRoleInClerk } from "./clerkUsers.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+function getStaticPath(): string {
+  try {
+    const metaUrl = typeof import.meta !== "undefined" && import.meta ? import.meta.url : undefined;
+    if (metaUrl && typeof metaUrl === "string") {
+      const filename = fileURLToPath(metaUrl);
+      const dirname = path.dirname(filename);
+      return path.resolve(dirname, "..", "dist", "public");
+    }
+  } catch {
+    // Fall through
+  }
+  return path.resolve(process.cwd(), "dist", "public");
+}
 
 export const app = express();
 
-// Serve static files from dist/public in production
-const staticPath =
-  process.env.NODE_ENV === "production"
-    ? path.resolve(__dirname, "public")
-    : path.resolve(__dirname, "..", "dist", "public");
+const staticPath = getStaticPath();
 
 app.use(express.json());
 app.use(express.static(staticPath));
