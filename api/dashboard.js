@@ -49,7 +49,7 @@ const sampleProjects = [
   }
 ];
 
-module.exports = (req, res) => {
+export default function handler(req, res) {
   res.setHeader("Content-Type", "application/json");
   res.status(200).json({
     projects: sampleProjects,
@@ -58,4 +58,4 @@ module.exports = (req, res) => {
     activity: [],
     financialTrend: []
   });
-};
+}

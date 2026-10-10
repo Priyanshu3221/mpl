@@ -1,4 +1,4 @@
-module.exports = (req, res) => {
+export default function handler(req, res) {
   const authHeader = req.headers.authorization || req.headers.Authorization;
 
   res.setHeader("Content-Type", "application/json");
@@ -24,4 +24,4 @@ module.exports = (req, res) => {
     ],
     bootstrap: false
   });
-};
+}

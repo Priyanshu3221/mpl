@@ -9,7 +9,7 @@ const sampleNotifications = [
   }
 ];
 
-module.exports = (req, res) => {
+export default function handler(req, res) {
   res.setHeader("Content-Type", "application/json");
   res.status(200).json(sampleNotifications);
-};
+}
