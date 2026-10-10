@@ -1,4 +1,4 @@
-import { normalizeRole, type Role } from "../shared/roles";
+import { normalizeRole, type Role } from "../shared/roles.js";
 
 /**
  * All reads and writes against Clerk's Backend API (the identity provider),

@@ -7,8 +7,8 @@ import {
   ROLES,
   type Permission,
   type Role,
-} from "../shared/roles";
-import { clerkAdminConfigured, getClerkUserById } from "./clerkUsers";
+} from "../shared/roles.js";
+import { clerkAdminConfigured, getClerkUserById } from "./clerkUsers.js";
 
 /**
  * Server-side authentication + authorization.

@@ -1,10 +1,10 @@
-import "./env"; // MUST be the first import — populates process.env before ./authz and ./clerkUsers read it.
+import "./env.js"; // MUST be the first import — populates process.env before ./authz and ./clerkUsers read it.
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
-import { requireAuth, requirePermission, type AuthedRequest } from "./authz";
-import { isValidPermission, normalizeRole, PERMISSIONS, TRANSITION_PERMISSIONS, can } from "../shared/roles";
-import { clerkAdminConfigured, listClerkUsers, setUserActiveInClerk, setUserRoleInClerk } from "./clerkUsers";
+import { requireAuth, requirePermission, type AuthedRequest } from "./authz.js";
+import { isValidPermission, normalizeRole, PERMISSIONS, TRANSITION_PERMISSIONS, can } from "../shared/roles.js";
+import { clerkAdminConfigured, listClerkUsers, setUserActiveInClerk, setUserRoleInClerk } from "./clerkUsers.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

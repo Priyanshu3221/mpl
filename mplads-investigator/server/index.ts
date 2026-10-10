@@ -1,6 +1,6 @@
-import "./env"; // MUST be the first import — populates process.env before ./authz and ./clerkUsers read it.
+import "./env.js"; // MUST be the first import — populates process.env before ./authz and ./clerkUsers read it.
 import { createServer } from "http";
-import { app } from "./app";
+import { app } from "./app.js";
 
 async function startServer() {
   const server = createServer(app);

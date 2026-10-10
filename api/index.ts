@@ -1,4 +1,4 @@
-import { app } from "../mplads-investigator/server/app";
+import { app } from "../mplads-investigator/server/app.js";
 
 export default function handler(req: any, res: any) {
   try {
