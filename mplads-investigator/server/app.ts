@@ -20,6 +20,15 @@ const staticPath =
 app.use(express.json());
 app.use(express.static(staticPath));
 
+// Normalize Vercel serverless request URLs so /api prefix is always present for API routing
+app.use((req, _res, next) => {
+  if (req.url && !req.url.startsWith("/api") && !req.url.includes(".")) {
+    // Only prefix if this is likely an API serverless invocation without /api prefix
+    req.url = "/api" + (req.url.startsWith("/") ? req.url : "/" + req.url);
+  }
+  next();
+});
+
 /* ----------------------------------------------------------------------
  * Core Data Mock Payloads for Serverless & Direct API Responses
  * -------------------------------------------------------------------- */
@@ -103,11 +112,12 @@ const sampleNotifications = [
 ];
 
 /* ----------------------------------------------------------------------
- * Authorization endpoints.
+ * API Router Mount
  * -------------------------------------------------------------------- */
+const apiRouter = express.Router();
 
 // Authoritative identity for the signed-in session.
-app.get("/api/me", requireAuth as never, (req, res) => {
+apiRouter.get("/me", requireAuth as never, (req, res) => {
   const { principal } = req as AuthedRequest;
   res.json({
     userId: principal?.userId,
@@ -119,7 +129,7 @@ app.get("/api/me", requireAuth as never, (req, res) => {
 });
 
 // Generic pre-flight gate used by the client before any privileged action.
-app.post("/api/authz/check", requireAuth as never, (req, res) => {
+apiRouter.post("/authz/check", requireAuth as never, (req, res) => {
   const { principal } = req as AuthedRequest;
   const permission = (req.body ?? {}).permission;
 
@@ -139,11 +149,9 @@ app.post("/api/authz/check", requireAuth as never, (req, res) => {
   return res.json({ allowed: true, role: principal.role, permission });
 });
 
-/* ----------------------------------------------------------------------
- * Core Feature Resource Endpoints
- * -------------------------------------------------------------------- */
+/* Core Feature Resource Endpoints */
 
-app.get("/api/dashboard", (_req, res) => {
+apiRouter.get("/dashboard", (_req, res) => {
   res.json({
     projects: sampleProjects,
     flags: [],
@@ -153,17 +161,17 @@ app.get("/api/dashboard", (_req, res) => {
   });
 });
 
-app.get("/api/projects", (_req, res) => {
+apiRouter.get("/projects", (_req, res) => {
   res.json(sampleProjects);
 });
 
-app.get("/api/projects/:id", (req, res) => {
+apiRouter.get("/projects/:id", (req, res) => {
   const item = sampleProjects.find((p) => p.id === req.params.id);
   if (!item) return res.status(404).json({ error: "not_found", message: "Project not found" });
   res.json(item);
 });
 
-app.post("/api/projects", (req, res) => {
+apiRouter.post("/projects", (req, res) => {
   const payload = req.body || {};
   const newProject = {
     id: `MPLADS-${Date.now()}`,
@@ -184,16 +192,16 @@ app.post("/api/projects", (req, res) => {
   res.status(201).json(newProject);
 });
 
-app.get("/api/reports", (_req, res) => {
+apiRouter.get("/reports", (_req, res) => {
   res.json(sampleReports);
 });
 
-app.get("/api/notifications", (_req, res) => {
+apiRouter.get("/notifications", (_req, res) => {
   res.json(sampleNotifications);
 });
 
 // Role-sensitive resources.
-app.get("/api/users", requireAuth as never, requirePermission(PERMISSIONS.MANAGE_USERS) as never, async (_req, res) => {
+apiRouter.get("/users", requireAuth as never, requirePermission(PERMISSIONS.MANAGE_USERS) as never, async (_req, res) => {
   if (!clerkAdminConfigured()) {
     return res.status(503).json({
       error: "clerk_admin_unconfigured",
@@ -211,8 +219,8 @@ app.get("/api/users", requireAuth as never, requirePermission(PERMISSIONS.MANAGE
   }
 });
 
-app.patch(
-  "/api/users/:id/role",
+apiRouter.patch(
+  "/users/:id/role",
   requireAuth as never,
   requirePermission(PERMISSIONS.MANAGE_USERS) as never,
   async (req, res) => {
@@ -241,8 +249,8 @@ app.patch(
   }
 );
 
-app.patch(
-  "/api/users/:id/status",
+apiRouter.patch(
+  "/users/:id/status",
   requireAuth as never,
   requirePermission(PERMISSIONS.MANAGE_USERS) as never,
   async (req, res) => {
@@ -269,11 +277,11 @@ app.patch(
   }
 );
 
-app.get("/api/audit", requireAuth as never, requirePermission(PERMISSIONS.VIEW_AUDIT) as never, (_req, res) => {
+apiRouter.get("/audit", requireAuth as never, requirePermission(PERMISSIONS.VIEW_AUDIT) as never, (_req, res) => {
   res.json({ authorized: true, entries: [] });
 });
 
-app.get("/api/flags/collusion", requireAuth as never, requirePermission(PERMISSIONS.REVIEW_FLAGS) as never, (_req, res) => {
+apiRouter.get("/flags/collusion", requireAuth as never, requirePermission(PERMISSIONS.REVIEW_FLAGS) as never, (_req, res) => {
   res.json({ authorized: true, networks: [] });
 });
 
@@ -351,8 +359,8 @@ function adaptPythonFlagsToMockFlags(pyFlags: PythonFlagItem[]) {
   });
 }
 
-app.post("/api/flags/detect", requireAuth as never, requirePermission(PERMISSIONS.VIEW_FLAGS) as never, async (_req, res) => {
-  const pythonEngineUrl = process.env.DETECTION_ENGINE_URL || "http://localhost:8000";
+apiRouter.post("/flags/detect", requireAuth as never, requirePermission(PERMISSIONS.VIEW_FLAGS) as never, async (_req, res) => {
+  const pythonEngineUrl = process.env.DETECTION_ENGINE_URL || "https://mpl-xis5.onrender.com";
   try {
     const response = await fetch(`${pythonEngineUrl}/detect/demo`);
     if (!response.ok) {
@@ -381,8 +389,8 @@ app.post("/api/flags/detect", requireAuth as never, requirePermission(PERMISSION
   }
 });
 
-app.get("/api/flags", requireAuth as never, requirePermission(PERMISSIONS.VIEW_FLAGS) as never, async (_req, res) => {
-  const pythonEngineUrl = process.env.DETECTION_ENGINE_URL || "http://localhost:8000";
+apiRouter.get("/flags", requireAuth as never, requirePermission(PERMISSIONS.VIEW_FLAGS) as never, async (_req, res) => {
+  const pythonEngineUrl = process.env.DETECTION_ENGINE_URL || "https://mpl-xis5.onrender.com";
   try {
     const response = await fetch(`${pythonEngineUrl}/detect/demo`);
     if (response.ok) {
@@ -396,12 +404,12 @@ app.get("/api/flags", requireAuth as never, requirePermission(PERMISSIONS.VIEW_F
   return res.json([]);
 });
 
-app.post("/api/reports/export", requireAuth as never, requirePermission(PERMISSIONS.EXPORT_REPORTS) as never, (_req, res) => {
+apiRouter.post("/reports/export", requireAuth as never, requirePermission(PERMISSIONS.EXPORT_REPORTS) as never, (_req, res) => {
   res.json({ authorized: true });
 });
 
 // Workflow transitions
-app.post("/api/projects/:id/transition", requireAuth as never, (req, res) => {
+apiRouter.post("/projects/:id/transition", requireAuth as never, (req, res) => {
   const { principal } = req as AuthedRequest;
   const target = (req.body ?? {}).to;
   const required = typeof target === "string" ? TRANSITION_PERMISSIONS[target] : undefined;
@@ -420,7 +428,7 @@ app.post("/api/projects/:id/transition", requireAuth as never, (req, res) => {
 });
 
 // Gemini Translation Endpoint
-app.post("/api/translate", async (req, res) => {
+apiRouter.post("/translate", async (req, res) => {
   const { text, targetLanguage } = req.body || {};
   const apiKey = process.env.GEMINI_API_KEY;
 
@@ -469,7 +477,15 @@ app.post("/api/translate", async (req, res) => {
   }
 });
 
-// Fallback response: All /api/* unhandled endpoints return JSON 404, non-API return index.html
+// Mount apiRouter at both /api and root
+app.use("/api", apiRouter);
+
+// Return JSON 404 for any unmatched request under /api
+app.use("/api", (_req, res) => {
+  res.status(404).json({ error: "not_found", message: "API route not found." });
+});
+
+// Fallback for SPA static HTML
 app.get("*", (req, res) => {
   if (req.path.startsWith("/api/") || req.originalUrl.startsWith("/api/")) {
     return res.status(404).json({ error: "not_found", message: "API route not found." });
