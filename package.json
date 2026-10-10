@@ -1,0 +1,9 @@
+{
+  "name": "mpl-root",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "cd mplads-investigator && npm install && npm run build"
+  }
+}
