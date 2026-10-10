@@ -49,7 +49,7 @@ const sampleProjects = [
   }
 ];
 
-export default function handler(req, res) {
+module.exports = (req, res) => {
   res.setHeader("Content-Type", "application/json");
   if (req.method === "POST") {
     const payload = req.body || {};
@@ -72,4 +72,4 @@ export default function handler(req, res) {
     return res.status(201).json(newProject);
   }
   return res.status(200).json(sampleProjects);
-}
+};

@@ -1,8 +1,7 @@
-export default async function handler(req, res) {
-  res.setHeader("Content-Type", "application/json");
-
+module.exports = (req, res) => {
   const authHeader = req.headers.authorization || req.headers.Authorization;
 
+  res.setHeader("Content-Type", "application/json");
   res.status(200).json({
     userId: authHeader ? "usr_live_session" : null,
     email: authHeader ? "user@mplads.gov.in" : null,
@@ -25,4 +24,4 @@ export default async function handler(req, res) {
     ],
     bootstrap: false
   });
-}
+};

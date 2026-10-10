@@ -53,7 +53,7 @@ function adaptPythonFlagsToMockFlags(pyFlags) {
   });
 }
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   res.setHeader("Content-Type", "application/json");
   const pythonEngineUrl = process.env.DETECTION_ENGINE_URL || "https://mpl-xis5.onrender.com";
 
@@ -68,4 +68,4 @@ export default async function handler(req, res) {
     // Fallback if engine unreachable
   }
   return res.status(200).json([]);
-}
+};
