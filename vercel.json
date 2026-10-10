@@ -1,29 +1,10 @@
 {
-  "version": 2,
-  "builds": [
+  "buildCommand": "cd mplads-investigator && npm run build",
+  "outputDirectory": "mplads-investigator/dist/public",
+  "rewrites": [
     {
-      "src": "mplads-investigator/api/index.ts",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "mplads-investigator/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist/public"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "mplads-investigator/api/index.ts"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "mplads-investigator/dist/public/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
